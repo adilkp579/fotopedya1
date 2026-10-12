@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fotopediya — Find Your Moments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/face-api.js/0.22.2/face-api.min.js"></script>
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-2:#f4f4f2;
+    --surface: rgba(30,22,10,0.035);
+    --surface-hi: rgba(30,22,10,0.07);
+    --border: rgba(120,85,35,0.18);
+    --border-hi: rgba(120,85,35,0.38);
+    --gold-1:#c08a34;
+    --gold-2:#9c6f28;
+    --wine:#6e2a38;
+    --wine-2:#8a3a48;
+    --text:#000000;
+    --text-muted:#555555;
+    --text-dim:#999999;
+    --ok:#4f8a5c;
+    --danger:#b23b2b;
+    --radius-lg:26px;
+    --radius-md:18px;
+    --radius-sm:12px;
+    --shadow: 0 20px 60px -20px rgba(40,30,15,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text); scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:'Fraunces',serif;}
+  .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:450; margin:0; letter-spacing:-0.01em;}
+  p{margin:0;}
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer; background:none; border:none; -webkit-appearance:none; appearance:none; color:inherit;}
+  ::selection{background:var(--gold-2); color:#160f08;}
+
+  /* ambient bg */
+  #ambient{display:none;}
+  #ambient .blob{position:absolute; border-radius:50%; filter:blur(70px); opacity:0.16; animation: drift 26s ease-in-out infinite;}
+  #ambient .b1{width:420px;height:420px; background:radial-gradient(circle, var(--gold-1), transparent 70%); top:-120px; left:-100px;}
+  #ambient .b2{width:360px;height:360px; background:radial-gradient(circle, var(--wine-2), transparent 70%); bottom:-100px; right:-80px; animation-delay:-9s;}
+  #ambient .b3{width:280px;height:280px; background:radial-gradient(circle, var(--gold-2), transparent 70%); top:40%; right:10%; animation-delay:-16s; opacity:0.18;}
+  @keyframes drift{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(30px,-40px) scale(1.08);}
+  }
+  .grain{display:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  #app{position:relative; z-index:2; min-height:100vh; padding-bottom:76px; padding-top:calc(46px + env(safe-area-inset-top));}
+  @media(min-width:900px){ #app{padding-bottom:0; padding-top:84px;} }
+
+  .container{max-width:1100px; margin:0 auto; padding:0 20px;}
+  @media(max-width:360px){ .container{padding:0 16px;} }
+  @media(min-width:900px){ .container{padding:0 32px;} }
+
+  /* Glass surfaces */
+  .glass{
+    background:var(--surface);
+    border:1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius:var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    box-shadow: var(--shadow);
+    transition:border-color .25s ease, transform .25s ease, background .25s ease;
+  }
+  .card:hover{border-color:var(--border-hi); background:var(--surface-hi);}
+
+  /* Buttons */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+    padding:13px 20px; border-radius:999px; border:1px solid transparent;
+    font-size:clamp(12.5px, 3.2vw, 14.5px); font-weight:600; letter-spacing:0.01em;
+    white-space:nowrap; min-height:46px; line-height:1.15;
+    transition: transform .22s cubic-bezier(.25,.8,.25,1), box-shadow .22s ease, opacity .2s ease, background .25s ease, border-color .25s ease, color .2s ease;
+  }
+  .btn svg{flex-shrink:0; width:16px; height:16px;}
+  .btn:active{transform:scale(0.96); transition-duration:.1s;}
+  @media(max-width:380px){ .btn{ padding:12px 14px; gap:6px; } }
+  @media(min-width:900px){ .btn{ padding:14px 26px; font-size:15px; min-height:48px; } .btn:hover{transform:translateY(-1px);} }
+  .btn-gold{
+    background:linear-gradient(135deg, var(--gold-1), var(--gold-2));
+    color:#1a1208; box-shadow:0 10px 30px -8px rgba(192,138,52,0.45);
+  }
+  .btn-gold:hover{box-shadow:0 14px 36px -6px rgba(192,138,52,0.6);}
+  .btn-ghost{
+    background:var(--surface); color:var(--text); border-color:var(--border);
+  }
+  .btn-ghost:hover{border-color:var(--border-hi);}
+  .btn-wine{ background:linear-gradient(135deg, var(--wine-2), var(--wine)); color:#f6e9e4; }
+  .btn-black{ background:#0a0908; color:var(--gold-1); border:1px solid #0a0908; }
+  .btn-black:hover{ background:#161311; }
+  .btn-danger{ background:var(--surface); color:var(--danger); border-color:rgba(178,59,43,0.35); }
+  .btn-danger:hover{ background:rgba(178,59,43,0.12); border-color:var(--danger); }
+  .btn-block{width:100%;}
+  .btn-sm{padding:9px 15px; font-size:clamp(11.5px,3vw,13px); min-height:38px;}
+  .btn-icon{width:44px; height:44px; padding:0; border-radius:50%;}
+  .btn:disabled{opacity:0.45; pointer-events:none;}
+
+  /* Equal-width action row (Phone / WhatsApp / Face Scanner, etc.) */
+  .action-row{display:grid; grid-template-columns:repeat(3,1fr); gap:9px;}
+  .action-row .btn{padding-left:10px; padding-right:10px;}
+  @media(max-width:420px){ .action-row{grid-template-columns:1fr 1fr; } .action-row .btn:last-child{grid-column:1/-1;} }
+  @media(min-width:900px){ .action-row{gap:12px;} }
+
+  /* Nav */
+  #topnav{position:fixed; top:0; left:0; right:0; z-index:50; display:none;}
+  @media(min-width:900px){ #topnav{display:block;} }
+  #topnav .bar{margin:14px auto 0; max-width:1100px; padding:12px 22px; display:flex; align-items:center; justify-content:space-between; background:#1c1a18; border:1px solid rgba(192,138,52,0.22); box-shadow:0 8px 28px -8px rgba(0,0,0,0.65);}
+
+  /* Mobile top header */
+  #mobiletop{position:fixed; top:0; left:0; right:0; z-index:50; display:flex;}
+  @media(min-width:900px){ #mobiletop{display:none;} }
+  #mobiletop .bar{width:100%; margin:0; border-radius:0 0 22px 22px; padding:9px 16px; padding-top:calc(9px + env(safe-area-inset-top)); display:flex; align-items:center; justify-content:flex-end; position:relative; border:none; background:transparent; box-shadow:none;}
+  #mobiletop .brand{position:absolute; left:50%; top:calc(50% + env(safe-area-inset-top)/2); transform:translate(-50%,-50%); font-size:19px; gap:7px; font-family:'Poppins',sans-serif; font-weight:700; letter-spacing:-0.02em; color:var(--text);}
+  #mobiletop .brand .mark{width:24px; height:24px;}
+  #mobiletop .scan-icon-btn{width:30px; height:30px; border-radius:0; background:none; border:none; display:grid; place-items:center; color:var(--gold-1); flex-shrink:0; padding:0;}
+  #mobiletop .scan-icon-btn svg{width:20px; height:20px;}
+  #mobiletop .scan-icon-btn:active{transform:scale(0.9);}
+  .brand{display:flex; align-items:center; gap:10px; font-family:'Poppins',sans-serif; font-size:19px; letter-spacing:-0.02em; font-weight:700; color:var(--text);}
+  .brand .mark{width:30px;height:30px;border-radius:50%; border:1.5px solid var(--gold-1); position:relative; display:grid; place-items:center;}
+  .brand .mark::before{content:''; width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--gold-1),var(--gold-2));}
+  .nav-links{display:flex; gap:6px; align-items:center;}
+  .nav-link{padding:9px 16px; border-radius:999px; font-size:14px; color:var(--text-muted); font-weight:500; transition:background-color .2s ease, color .2s ease, border-color .2s ease;}
+  .nav-link.active{color:var(--text); background:var(--surface); border:1px solid var(--border);}
+
+  #bottomnav{position:fixed; bottom:10px; left:0; right:0; z-index:50; display:flex; justify-content:center; padding:0 16px;}
+  @media(min-width:900px){ #bottomnav{display:none;} }
+  #bottomnav .bar{display:flex; gap:2px; padding:5px; border-radius:999px; background:#1c1a18; border:1px solid rgba(192,138,52,0.22); box-shadow:0 8px 28px -6px rgba(0,0,0,0.65);}
+  .bn-item{display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 16px; border-radius:999px; color:var(--text-dim); font-size:9.5px; font-weight:600; letter-spacing:0.02em; transition:background-color .3s ease, color .3s ease, transform .18s ease;}
+  .bn-item:active{transform:scale(0.92);}
+  .bn-item.active{color:var(--gold-1); background:var(--surface-hi);}
+  .bn-item svg{width:17px; height:17px; transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+  .bn-item.active svg{transform:scale(1.12);}
+
+  /* Aperture signature button */
+  .aperture-btn{
+    position:relative; width:180px; height:180px; border-radius:50%; margin:0 auto;
+    display:grid; place-items:center; background:radial-gradient(circle at 35% 30%, rgba(192,138,52,0.14), transparent 60%), var(--surface);
+    border:1px solid var(--border);
+  }
+  .aperture-btn .ring{position:absolute; inset:8px; border-radius:50%; border:1.5px dashed var(--border-hi); animation:spin 40s linear infinite;}
+  @media(max-width:360px){ .aperture-btn{width:152px; height:152px;} .aperture-core{width:100px; height:100px;} }
+  .aperture-btn .corner{position:absolute; width:16px; height:16px; border:2px solid var(--gold-1);}
+  .aperture-btn .c1{top:-1px;left:-1px;border-right:none;border-bottom:none; border-top-left-radius:8px;}
+  .aperture-btn .c2{top:-1px;right:-1px;border-left:none;border-bottom:none; border-top-right-radius:8px;}
+  .aperture-btn .c3{bottom:-1px;left:-1px;border-right:none;border-top:none; border-bottom-left-radius:8px;}
+  .aperture-btn .c4{bottom:-1px;right:-1px;border-left:none;border-top:none; border-bottom-right-radius:8px;}
+  .aperture-core{width:120px; height:120px; border-radius:50%; display:grid; place-items:center; background:linear-gradient(160deg, rgba(192,138,52,0.16), rgba(110,42,56,0.14)); border:1px solid var(--border-hi); text-align:center; padding:8px;}
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  .pulse{animation:pulse 2.6s ease-in-out infinite;}
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.55;} }
+
+  /* Hero */
+  .hero{padding:clamp(40px,10vw,72px) 0 clamp(28px,6vw,44px); text-align:center;}
+  .eyebrow{font-size:clamp(10px,2.6vw,11.5px); letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-1); font-weight:600; margin-bottom:14px;}
+  .hero h1{font-size:clamp(34px,10vw,64px); line-height:1.05; font-weight:450;}
+  .hero .sub{color:var(--text-muted); font-size:clamp(14px,3.6vw,17px); margin-top:14px; max-width:420px; margin-left:auto; margin-right:auto;}
+
+  /* sections */
+  .section{padding:clamp(28px,6vw,64px) 0;}
+  .section-title{font-size:clamp(20px,4.5vw,28px); margin-bottom:6px;}
+  .section-kicker{color:var(--text-dim); font-size:13.5px; margin-bottom:18px;}
+  .grid-3{display:grid; gap:14px; grid-template-columns:1fr;}
+  @media(min-width:640px){ .grid-3{grid-template-columns:repeat(2,1fr);} }
+  @media(min-width:900px){ .grid-3{grid-template-columns:repeat(3,1fr); gap:18px;} }
+  .feature{padding:clamp(18px,4vw,26px); }
+  .feature .num{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--gold-1); margin-bottom:10px; display:block;}
+  .feature h3{font-size:clamp(15.5px,3.6vw,18px); margin-bottom:8px; font-weight:600; font-family:'Inter',sans-serif;}
+  .feature p{color:var(--text-muted); font-size:clamp(13px,3vw,14px); line-height:1.55;}
+
+  /* stats grid: 2-up on mobile, 4-up on desktop */
+  .stats-grid{grid-template-columns:repeat(2,1fr) !important;}
+  @media(min-width:640px){ .stats-grid{grid-template-columns:repeat(4,1fr) !important;} }
+
+  /* Photo grid */
+  .photo-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px;}
+  @media(min-width:640px){ .photo-grid{grid-template-columns:repeat(3,1fr); gap:12px;} }
+  @media(min-width:1000px){ .photo-grid{grid-template-columns:repeat(4,1fr); gap:14px;} }
+  @media(min-width:1300px){ .photo-grid{grid-template-columns:repeat(5,1fr);} }
+  .photo-card{position:relative; border-radius:var(--radius-sm); overflow:hidden; aspect-ratio:3/4; background:var(--bg-2); border:1px solid var(--border);}
+  .photo-card img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s ease;}
+  .photo-card:active img{transform:scale(1.04);}
+  .photo-card .tag{position:absolute; top:8px; left:8px; font-size:10px; padding:3px 8px; border-radius:999px; background:rgba(10,9,8,0.6); color:#fff; backdrop-filter:blur(6px); font-weight:600; letter-spacing:0.02em;}
+  .photo-card .conf{color:var(--gold-1);}
+  .photo-card .actions{position:absolute; bottom:0; left:0; right:0; display:flex; justify-content:flex-end; gap:6px; padding:8px; background:linear-gradient(0deg, rgba(0,0,0,0.55), transparent);}
+  .mini-btn{width:34px;height:34px;border-radius:50%; background:rgba(10,9,8,0.55); border:1px solid rgba(255,255,255,0.14); display:grid; place-items:center; backdrop-filter:blur(6px); flex-shrink:0; color:#fff; transition:background-color .2s ease, transform .15s ease;}
+  .mini-btn:active{transform:scale(0.88);}
+  .mini-btn.fav.active{background:var(--wine);}
+  .mini-btn svg{width:15px;height:15px;}
+  @media(min-width:900px){ .mini-btn{width:36px;height:36px;} }
+
+  /* Skeleton */
+  .skel{background:linear-gradient(90deg, var(--surface) 25%, var(--surface-hi) 37%, var(--surface) 63%); background-size:400% 100%; animation:shimmer 1.6s ease infinite;}
+  @keyframes shimmer{ 0%{background-position:100% 0;} 100%{background-position:0 0;} }
+
+  /* Overlay / modal / sheet */
+  .overlay{position:fixed; inset:0; z-index:200; background:rgba(6,5,4,0.78); backdrop-filter:blur(6px); display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity .25s ease;}
+  .overlay.open{opacity:1; pointer-events:auto;}
+  @media(min-width:720px){ .overlay{align-items:center;} }
+  .sheet{width:100%; max-width:480px; max-height:92vh; overflow-y:auto; background:var(--bg-2); border:1px solid var(--border); border-radius:28px 28px 0 0; padding:22px 20px 28px; transform:translateY(24px); transition:transform .3s ease;}
+  .overlay.open .sheet{transform:translateY(0);}
+  @media(min-width:720px){ .sheet{border-radius:28px; margin-bottom:0;} }
+  .sheet-handle{width:38px; height:4px; border-radius:99px; background:var(--border-hi); margin:0 auto 16px;}
+  .sheet-close{position:absolute; top:18px; right:18px; width:34px;height:34px;border-radius:50%; background:var(--surface); border:1px solid var(--border); display:grid; place-items:center;}
+
+  input, textarea, select{
+    width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text);
+    padding:13px 15px; border-radius:14px; font-size:14.5px; font-family:inherit; outline:none;
+    transition:border-color .2s ease;
+  }
+  input:focus, textarea:focus, select:focus{border-color:var(--border-hi);}
+  input::placeholder, textarea::placeholder{color:var(--text-dim);}
+  label{font-size:12.5px; color:var(--text-muted); font-weight:600; letter-spacing:0.01em; display:block; margin-bottom:7px;}
+  .field{margin-bottom:16px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media(max-width:420px){ .field-row{grid-template-columns:1fr;} }
+
+  .switch{position:relative; width:44px; height:25px; border-radius:99px; background:var(--surface-hi); border:1px solid var(--border); flex-shrink:0; transition:background .2s ease;}
+  .switch::after{content:''; position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:var(--text-dim); transition:transform .2s ease, background .2s ease;}
+  .switch.on{background:linear-gradient(135deg,var(--gold-1),var(--gold-2)); border-color:transparent;}
+  .switch.on::after{transform:translateX(19px); background:#1a1208;}
+
+  /* toast */
+  #toastwrap{position:fixed; top:18px; left:0; right:0; z-index:400; display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none;}
+  .toast{padding:12px 20px; border-radius:999px; font-size:13.5px; font-weight:500; box-shadow:var(--shadow); display:flex; align-items:center; gap:8px; animation:toastin .25s ease;}
+  @keyframes toastin{ from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
+
+  .empty{text-align:center; padding:60px 20px; color:var(--text-muted);}
+  .empty .ic{width:52px;height:52px; margin:0 auto 16px; opacity:0.6;}
+
+  .avatar{border-radius:50%; object-fit:cover; border:2px solid var(--border-hi); background:var(--bg-2);}
+  .cover-wrap{position:relative; height:190px; border-radius:var(--radius-lg); overflow:hidden; margin-bottom:0;}
+  .cover-wrap img{width:100%; height:100%; object-fit:cover;}
+  .cover-wrap::after{content:''; position:absolute; inset:0; background:linear-gradient(0deg, var(--bg) 4%, transparent 55%);}
+  .photo-edit-btn{position:absolute; z-index:3; width:32px; height:32px; border-radius:50%; background:rgba(10,9,8,0.68); border:1px solid rgba(245,232,214,0.3); display:grid; place-items:center; color:var(--gold-1); backdrop-filter:blur(6px); transition:background-color .2s ease, transform .15s ease;}
+  .photo-edit-btn:active{transform:scale(0.88);}
+  .photo-edit-btn svg{width:14px; height:14px;}
+  .cover-edit-btn{bottom:12px; right:14px;}
+  .avatar-wrap{position:relative; display:inline-block; flex-shrink:0;}
+  .avatar-edit-btn{bottom:-2px; right:-2px; width:27px; height:27px;}
+  .profile-head{margin-top:-46px; padding:0 20px; position:relative; z-index:2; display:flex; align-items:flex-end; gap:14px;}
+
+  .segmented{display:inline-flex; flex-wrap:wrap; padding:4px; border-radius:999px; gap:2px;}
+  .seg-item{padding:8px 14px; border-radius:999px; font-size:clamp(11.5px,3vw,12.5px); font-weight:600; color:var(--text-muted); white-space:nowrap; min-height:36px; transition:background-color .2s ease, color .2s ease, border-color .2s ease;}
+  .seg-item.active{background:var(--surface-hi); color:var(--text); border:1px solid var(--border);}
+  #roleSeg{background:transparent; border:1px solid var(--border-hi);}
+  #roleSeg .seg-item{background:transparent;}
+  #roleSeg .seg-item.active{background:#0a0908; color:var(--gold-1); border:1px solid #0a0908;}
+
+  .stat{padding:16px; text-align:left;}
+  .stat .v{font-family:'IBM Plex Mono',monospace; font-size:clamp(18px,4.5vw,24px); color:var(--gold-1);}
+  .stat .l{font-size:11.5px; color:var(--text-muted); margin-top:3px;}
+  @media(min-width:900px){ .stat{padding:20px;} }
+
+  .progressbar{height:6px; border-radius:99px; background:var(--surface); overflow:hidden; border:1px solid var(--border);}
+
+  /* Booking status card — animated countdown-to-event progress line */
+  .booking-progress{height:8px; border-radius:99px; background:var(--surface-hi); overflow:hidden; position:relative; border:1px solid var(--border);}
+  .booking-progress .fill{height:100%; border-radius:99px; position:relative; overflow:hidden; width:0%; transition:width 1s ease, background 0.6s ease;}
+  .booking-progress .fill.yellow{background:linear-gradient(90deg,#c99a4e,#e8c589);}
+  .booking-progress .fill.red{background:linear-gradient(90deg,#a4453a,#c96a5c);}
+  .booking-progress .fill.green{background:linear-gradient(90deg,#5f8f6a,#7fae8a);}
+  .booking-progress .fill::after{content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); background-size:200% 100%; animation:booking-shimmer 1.8s linear infinite;}
+  @keyframes booking-shimmer{ from{background-position:200% 0;} to{background-position:-200% 0;} }
+  .booking-card .label-dot{width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:6px;}
+  .booking-card .label-dot.yellow{background:#e8c589;}
+  .booking-card .label-dot.red{background:#c96a5c;}
+  .booking-card .label-dot.green{background:#7fae8a;}
+
+  .progressbar .fill{height:100%; background:linear-gradient(90deg,var(--gold-2),var(--gold-1)); transition:width .3s ease;}
+
+  .badge-role{font-size:10.5px; padding:4px 10px; border-radius:999px; border:1px solid var(--border-hi); font-weight:600; letter-spacing:0.03em;}
+
+  video.scanvid{width:100%; height:100%; object-fit:cover;}
+  video.facevid{width:100%; height:100%; object-fit:cover; transform:scaleX(-1);}
+  .scan-frame{position:absolute; inset:14%; border:2px solid var(--gold-1); border-radius:24px; box-shadow:0 0 0 2000px rgba(6,5,4,0.55);}
+  .scan-line{position:absolute; left:6%; right:6%; height:2px; background:linear-gradient(90deg, transparent, var(--gold-1), transparent); top:14%; animation:scanmove 2.2s ease-in-out infinite;}
+  @keyframes scanmove{ 0%,100%{top:14%;} 50%{top:84%;} }
+  .face-oval{position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); width:58%; aspect-ratio:3/4; border:3px solid var(--text-dim); border-radius:50%; transition:border-color .2s ease, box-shadow .2s ease;}
+  .face-oval.found{border-color:var(--gold-1); box-shadow:0 0 30px -4px rgba(192,138,52,0.6);}
+
+  /* Face ID-style scanning ring */
+  .faceid-wrap{position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); width:60%; aspect-ratio:1; transition:filter .3s ease;}
+  .faceid-wrap svg{width:100%; height:100%; display:block; transform:rotate(-90deg);}
+  .faceid-track{fill:none; stroke:rgba(255,255,255,0.14); stroke-width:3;}
+  .faceid-progress{
+    fill:none; stroke:var(--text-dim); stroke-width:3.5; stroke-linecap:round;
+    stroke-dasharray:90 249; stroke-dashoffset:0;
+    transform-origin:60px 60px; animation:faceid-spin 2.4s linear infinite;
+    transition:stroke .25s ease;
+  }
+  @keyframes faceid-spin{ to{ transform:rotate(360deg); } }
+  .faceid-wrap.found{ filter:drop-shadow(0 0 14px rgba(192,138,52,0.5)); }
+  .faceid-wrap.found .faceid-progress{ stroke:var(--gold-1); }
+  .faceid-wrap.scanning .faceid-progress{
+    animation:none; stroke-dasharray:339; stroke-dashoffset:339; stroke:var(--gold-1);
+    transition:stroke-dashoffset 2.2s cubic-bezier(.4,0,.2,1);
+  }
+  .faceid-wrap.scanning.fill .faceid-progress{ stroke-dashoffset:0; }
+  .faceid-wrap.done{ filter:drop-shadow(0 0 20px rgba(192,138,52,0.75)); }
+  .faceid-wrap.done .faceid-progress{ stroke:var(--gold-1); stroke-dasharray:339; stroke-dashoffset:0; animation:faceid-pulse 1s ease-in-out infinite; }
+  @keyframes faceid-pulse{ 0%,100%{opacity:1;} 50%{opacity:0.55;} }
+
+  .fade-in{animation:fadein .4s cubic-bezier(.25,.8,.25,1) both;}
+  @keyframes fadein{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .divider{height:1px; background:var(--border); margin:22px 0;}
+
+  ::-webkit-scrollbar{display:none;}
+  html,body,.sheet{scrollbar-width:none; -ms-overflow-style:none;}
+
+  a.link-underline{border-bottom:1px solid var(--border-hi); padding-bottom:1px;}
+  .kv{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);}
+  .kv:last-child{border-bottom:none;}
+</style>
+</head>
+<body>
+
+<div id="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="grain"></div>
+<div id="toastwrap"></div>
+
+<nav id="mobiletop">
+  <div class="bar glass">
+    <a href="#/home" class="brand">Fotopediya</a>
+    <button class="scan-icon-btn" id="mobileScanBtn" aria-label="Scan Event QR">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+    </button>
+  </div>
+</nav>
+
+<nav id="topnav">
+  <div class="bar glass">
+    <a href="#/home" class="brand">Fotopediya</a>
+    <div class="nav-links" id="topnavlinks"></div>
+  </div>
+</nav>
+
+<div id="app"></div>
+
+<nav id="bottomnav">
+  <div class="bar glass" id="bottomnavlinks"></div>
+</nav>
+
+<script>
+/* ============ ICONS ============ */
+const ICON = {
+  home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>`,
+  files:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 7l2.5-3h13L21 7"/></svg>`,
+  profile:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.5-4 5-6 7.5-6s6 2 7.5 6"/></svg>`,
+  qr:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M17 20h4"/></svg>`,
+  phone:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h4l1.5 4.5L8 10.5a12 12 0 0 0 5.5 5.5l1.5-2.5 4.5 1.5v4a1 1 0 0 1-1.1 1C9.6 19.4 4.6 14.4 4 5.1A1 1 0 0 1 5 4Z"/></svg>`,
+  whatsapp:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.6 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.1.1-1.8-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.1.2-.2.3-.4.5-.2.2-.4.4-.5.6-.2.2-.4.4-.2.7.2.3.9 1.5 2 2.4 1.4 1.2 2.5 1.6 2.8 1.8.3.2.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.7.8 2 1 .3.1.5.2.5.3.1.3.1.6-.1 1.1Z"/></svg>`,
+  scan:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8V5a1 1 0 0 1 1-1h3M4 16v3a1 1 0 0 0 1 1h3M20 8V5a1 1 0 0 0-1-1h-3M20 16v3a1 1 0 0 1-1 1h-3"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>`,
+  face:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8.5 15c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5"/></svg>`,
+  download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>`,
+  share:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.3 10.7 7.4-4.4M8.3 13.3l7.4 4.4"/></svg>`,
+  heart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-9.5-8.8C.8 8 2 4.5 5.4 4a5 5 0 0 1 6.6 2.3A5 5 0 0 1 18.6 4c3.4.5 4.6 4 3 7.2C19 15.6 12 20 12 20Z"/></svg>`,
+  close:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>`,
+  open:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 4h6v6M9 15 20 4M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg>`,
+  camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>`,
+  calendar:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>`,
+  video:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>`,
+  chevronR:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>`,
+  lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10.5" width="14" height="9" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`,
+  logout:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h3M15 16l4-4-4-4M19 12H8"/></svg>`,
+};
+
+/* ============ PERSISTENT STORAGE (real accounts/events/photos) ============ */
+/* Uses the platform's window.storage when available (persists per-account,
+   across reloads and devices). Falls back to localStorage if this file is
+   opened outside that environment, so it still works standalone. */
+async function dbGet(key, shared=false){
+  try{
+    if(window.storage){ const r = await window.storage.get(key, shared); return r ? JSON.parse(r.value) : null; }
+  }catch(e){ return null; }
+  try{ const raw = localStorage.getItem('fp_'+(shared?'shared_':'local_')+key); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+async function dbSet(key, val, shared=false){
+  try{
+    if(window.storage){ await window.storage.set(key, JSON.stringify(val), shared); return true; }
+  }catch(e){ return false; }
+  try{ localStorage.setItem('fp_'+(shared?'shared_':'local_')+key, JSON.stringify(val)); return true; }catch(e){ return false; }
+}
+async function dbDel(key, shared=false){
+  try{
+    if(window.storage){ await window.storage.delete(key, shared); return true; }
+  }catch(e){ return false; }
+  try{ localStorage.removeItem('fp_'+(shared?'shared_':'local_')+key); return true; }catch(e){ return false; }
+}
+
+/* ============ STORE ============ */
+const Store = {
+  session: null,           // {role, name, username, email, businessName}
+  favorites: new Set(),
+  myPhotos: [],
+  myEventIds: [],
+  myBookings: [],
+  deletedDemoIds: new Set(),
+  booted: false,
+
+  async boot(){
+    const [session, favs, photos, eventIds, deletedDemo, myBookings] = await Promise.all([
+      dbGet('session'), dbGet('favorites'), dbGet('my_photos'), dbGet('my_events'), dbGet('deleted_demo_photos'), dbGet('my_bookings')
+    ]);
+    this.session = session || null;
+    this.favorites = new Set(favs || []);
+    if(photos){ this.myPhotos = photos; }
+    else { this.myPhotos = MOCK_USER_PHOTOS.slice(); await dbSet('my_photos', this.myPhotos); }
+    this.myEventIds = eventIds || [];
+    this.deletedDemoIds = new Set(deletedDemo || []);
+    this.myBookings = myBookings || [];
+    this.booted = true;
+  },
+  async saveSession(s){
+    this.session=s;
+    await dbSet('session', s);
+    if(s.role==='photographer') await upsertPhotographerDirectory(s);
+  },
+  async logout(){ this.session=null; await dbDel('session'); },
+  async deleteAccount(){
+    for(const id of this.myEventIds){ await dbDel('event:'+id, true); }
+    if(this.session?.role==='photographer') await removeFromPhotographerDirectory(this.session.username);
+    this.session=null; this.myPhotos=[]; this.myEventIds=[]; this.favorites=new Set();
+    await Promise.all([dbDel('session'), dbDel('my_photos'), dbDel('my_events'), dbDel('favorites')]);
+  },
+  async toggleFav(id){
+    this.favorites.has(id)?this.favorites.delete(id):this.favorites.add(id);
+    await dbSet('favorites', [...this.favorites]);
+  },
+  async setMyPhotos(photos){ this.myPhotos = photos; await dbSet('my_photos', photos); },
+  async deleteDemoPhoto(id){ this.deletedDemoIds.add(id); await dbSet('deleted_demo_photos', [...this.deletedDemoIds]); },
+  async addMyBooking(entry){ this.myBookings = [entry, ...this.myBookings]; await dbSet('my_bookings', this.myBookings); },
+  async removeMyBooking(id){ this.myBookings = this.myBookings.filter(b=>b.id!==id); await dbSet('my_bookings', this.myBookings); },
+  async addEvent(ev){
+    this.myEventIds = [ev.id, ...this.myEventIds];
+    await dbSet('my_events', this.myEventIds);
+    ev.ownerUsername = this.session?.username || '';
+    await dbSet('event:'+ev.id, ev, true); // shared: guests need to find this by QR/link
+    if(ev.ownerUsername){
+      const list = (await dbGet('photographer_events:'+ev.ownerUsername, true)) || [];
+      if(!list.includes(ev.id)){ list.unshift(ev.id); await dbSet('photographer_events:'+ev.ownerUsername, list, true); }
+    }
+  },
+  async saveEvent(ev){ await dbSet('event:'+ev.id, ev, true); },
+  async deleteEvent(id){
+    this.myEventIds = this.myEventIds.filter(eid=>eid!==id);
+    await dbSet('my_events', this.myEventIds);
+    await dbDel('event:'+id, true);
+    const username = this.session?.username;
+    if(username){
+      const list = (await dbGet('photographer_events:'+username, true)) || [];
+      await dbSet('photographer_events:'+username, list.filter(eid=>eid!==id), true);
+    }
+  },
+};
+
+/* Resolve an event by id: the bundled demo event always works offline;
+   photographer-created events are looked up from shared storage so a guest
+   scanning the QR on a different device/browser can actually see it. */
+async function resolveEvent(id){
+  if(id === DEMO_EVENT.id) return DEMO_EVENT;
+  const ev = await dbGet('event:'+id, true);
+  return ev || null;
+}
+function isExpired(ev){
+  if(!ev.expiry || ev.expiry==='custom') return false;
+  return new Date(ev.expiry) < new Date(new Date().toDateString());
+}
+/* Combined photo list for an event: bundled seed photos (demo event only,
+   minus anything deleted) plus any photos actually uploaded from this device.
+   Pass guestOnly=true for anything a guest/visitor sees (event gallery, face
+   search, public portfolio) so photos the photographer marked Private stay
+   hidden from everyone but the photographer's own management view. */
+async function getEventPhotos(ev, guestOnly=false){
+  let seed = [];
+  if(ev.id === DEMO_EVENT.id){
+    seed = DEMO_EVENT.photos.filter(p=>!Store.deletedDemoIds.has(p.id));
+  }
+  const uploaded = await UploadsDB.allForEvent(ev.id);
+  let all = [...uploaded, ...seed];
+  if(guestOnly) all = all.filter(p=>p.isPublic===true);
+  return all.sort((a,b)=>b.ts-a.ts);
+}
+/* Custom cover/profile photo chosen by the event's creator, if any (shared — visible to any guest). */
+async function getEventImageOverrides(eventId){
+  const [avatarUrl, coverUrl] = await Promise.all([
+    getSharedImage('img:event:avatar:'+eventId),
+    getSharedImage('img:event:cover:'+eventId)
+  ]);
+  return { avatarUrl, coverUrl };
+}
+function isEventOwner(ev){
+  return Store.session?.role==='photographer' && Store.myEventIds.includes(ev.id);
+}
+
+/* Shared directory of photographers, so normal users/guests can find and
+   book one even on a different device. Kept in shared storage. */
+async function upsertPhotographerDirectory(s){
+  const list = (await dbGet('photographer_directory', true)) || [];
+  const filtered = list.filter(p=>p.username!==s.username);
+  filtered.push({ username:s.username, name:s.name, businessName:s.businessName||'', phone:s.phone||'', whatsapp:s.whatsapp||'' });
+  await dbSet('photographer_directory', filtered, true);
+}
+async function removeFromPhotographerDirectory(username){
+  const list = (await dbGet('photographer_directory', true)) || [];
+  await dbSet('photographer_directory', list.filter(p=>p.username!==username), true);
+}
+
+/* ============ MOCK DATA ============ */
+function seedPhotos(seedPrefix, n, kindMix=true){
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const isVideo = kindMix && i%9===7;
+    arr.push({
+      id: seedPrefix+'-'+i,
+      type: isVideo?'video':'photo',
+      url: `https://picsum.photos/seed/${seedPrefix}${i}/500/700`,
+      thumb: `https://picsum.photos/seed/${seedPrefix}${i}/260/360`,
+      hasFace: i%3!==0,
+      confidence: (0.99 - (i%7)*0.03).toFixed(2),
+      ts: Date.now() - i*3600_000*3,
+    });
+  }
+  return arr;
+}
+const DEMO_EVENT = {
+  id: 'ambro-wedding-2026',
+  name: 'Adil & Fathima Wedding',
+  studio: 'Ambro Photography',
+  tagline: 'Capturing your beautiful moments.',
+  date: '2026-09-12',
+  expiry: '2026-09-19',
+  cover: 'https://picsum.photos/seed/weddingcover/1200/700',
+  avatar: 'https://picsum.photos/seed/ambrostudio/200/200',
+  phone: '+919876543210',
+  whatsapp: '919876543210',
+  photos: seedPhotos('amb', 60),
+};
+const MOCK_USER_PHOTOS = seedPhotos('mine', 8, false).map((p,i)=>({...p, isPublic: i%2===0}));
+
+/* ============ IndexedDB (Files) ============ */
+const FilesDB = (() => {
+  let dbp = null;
+  function open(){
+    if(dbp) return dbp;
+    dbp = new Promise((resolve,reject)=>{
+      const req = indexedDB.open('fotopediya_files', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('files')){
+          const s = db.createObjectStore('files', {keyPath:'id'});
+          s.createIndex('downloadedAt','downloadedAt');
+        }
+      };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = e => reject(e);
+    });
+    return dbp;
+  }
+  return {
+    async add(file){
+      const db = await open();
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('files','readwrite');
+        tx.objectStore('files').put(file);
+        tx.oncomplete=()=>res(true); tx.onerror=rej;
+      });
+    },
+    async all(){
+      const db = await open();
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('files','readonly');
+        const req = tx.objectStore('files').getAll();
+        req.onsuccess=()=>res(req.result.sort((a,b)=>b.downloadedAt-a.downloadedAt));
+        req.onerror=rej;
+      });
+    },
+    async remove(id){
+      const db = await open();
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('files','readwrite');
+        tx.objectStore('files').delete(id);
+        tx.oncomplete=()=>res(true); tx.onerror=rej;
+      });
+    },
+    async clear(){
+      const db = await open();
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('files','readwrite');
+        tx.objectStore('files').clear();
+        tx.oncomplete=()=>res(true); tx.onerror=rej;
+      });
+    }
+  };
+})();
+
+/* ============ IndexedDB (real photographer uploads, per device) ============ */
+/* Actual files a photographer selects from their device are read and stored
+   here for real — no fake progress bar. Since there's no cloud backend yet,
+   uploaded media lives on the uploading device; the event's basic info
+   (name, cover, contact, expiry, item count) is shared so the QR/link works
+   for guests on any device. */
+const UploadsDB = (() => {
+  let dbp = null;
+  // Object URLs are expensive and leak memory if recreated every render —
+  // cache one per record and reuse it instead of minting new ones each time.
+  const urlCache = new Map();
+  function cachedUrl(key, blob){
+    if(!blob) return null;
+    if(!urlCache.has(key)) urlCache.set(key, URL.createObjectURL(blob));
+    return urlCache.get(key);
+  }
+  function open(){
+    if(dbp) return dbp;
+    dbp = new Promise((resolve,reject)=>{
+      const req = indexedDB.open('fotopediya_uploads', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('uploads')){
+          const s = db.createObjectStore('uploads', {keyPath:'id'});
+          s.createIndex('eventId','eventId');
+        }
+      };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = e => reject(e);
+    });
+    return dbp;
+  }
+  return {
+    async add(rec){
+      const db = await open();
+      // Videos can't be used as an <img> source — capture a real poster
+      // frame once at upload time so grids show an actual thumbnail
+      // instead of a broken image / the browser choking on a video blob.
+      if(rec.type==='video' && !rec.posterBlob){
+        try{ rec.posterBlob = await captureVideoPoster(rec.blob); }catch(e){ /* fall back to no poster below */ }
+      }
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('uploads','readwrite');
+        tx.objectStore('uploads').put(rec);
+        tx.oncomplete=()=>res(true); tx.onerror=rej;
+      });
+    },
+    async allForEvent(eventId){
+      const db = await open();
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('uploads','readonly');
+        const req = tx.objectStore('uploads').index('eventId').getAll(eventId);
+        req.onsuccess=()=>{
+          const list = req.result.map(r=>({
+            id:r.id, type:r.type, hasFace:true, confidence:'0.95', ts:r.ts,
+            isPublic: r.isPublic === true,
+            url: cachedUrl(r.id+':full', r.blob),
+            thumb: r.type==='video'
+              ? (r.posterBlob ? cachedUrl(r.id+':poster', r.posterBlob) : cachedUrl(r.id+':full', r.blob))
+              : cachedUrl(r.id+':full', r.blob),
+            source:'upload'
+          }));
+          res(list);
+        };
+        req.onerror=rej;
+      });
+    },
+    async setPublic(id, isPublic){
+      const db = await open();
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('uploads','readwrite');
+        const store = tx.objectStore('uploads');
+        const getReq = store.get(id);
+        getReq.onsuccess = ()=>{
+          const rec = getReq.result;
+          if(!rec){ res(false); return; }
+          rec.isPublic = isPublic;
+          store.put(rec);
+        };
+        tx.oncomplete=()=>res(true); tx.onerror=rej;
+      });
+    },
+    async remove(id){
+      const db = await open();
+      // Release any cached object URLs for this record so the browser can
+      // actually free the underlying memory instead of holding it forever.
+      for(const key of [...urlCache.keys()]){
+        if(key.startsWith(id+':')){ URL.revokeObjectURL(urlCache.get(key)); urlCache.delete(key); }
+      }
+      return new Promise((res,rej)=>{
+        const tx = db.transaction('uploads','readwrite');
+        tx.objectStore('uploads').delete(id);
+        tx.oncomplete=()=>res(true); tx.onerror=rej;
+      });
+    }
+  };
+})();
+
+/* ============ Shared profile/cover images ============ */
+/* Stored in shared storage (compressed to a small JPEG data URL) so a
+   photographer's or event's photo is visible to guests on any device —
+   not just the device it was uploaded from. */
+/* Captures a real still frame from a video file to use as its gallery
+   thumbnail — feeding a video blob straight into an <img> tag doesn't
+   render anything usable and wastes memory holding the full video open. */
+function captureVideoPoster(videoBlob, maxDim=500){
+  return new Promise((resolve, reject)=>{
+    const video = document.createElement('video');
+    video.muted = true; video.playsInline = true; video.preload = 'metadata';
+    const url = URL.createObjectURL(videoBlob);
+    video.src = url;
+    const cleanup = ()=>URL.revokeObjectURL(url);
+    video.addEventListener('loadeddata', ()=>{
+      try{ video.currentTime = Math.min(0.5, (video.duration||1)/4); }
+      catch(e){ onSeeked(); }
+    });
+    function onSeeked(){
+      try{
+        let {videoWidth:w, videoHeight:h} = video;
+        if(!w || !h){ cleanup(); resolve(null); return; }
+        if(w>h && w>maxDim){ h=Math.round(h*maxDim/w); w=maxDim; }
+        else if(h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(video,0,0,w,h);
+        canvas.toBlob(blob=>{ cleanup(); resolve(blob); }, 'image/jpeg', 0.8);
+      }catch(e){ cleanup(); resolve(null); }
+    }
+    video.addEventListener('seeked', onSeeked, {once:true});
+    video.addEventListener('error', ()=>{ cleanup(); resolve(null); });
+    setTimeout(()=>resolve(null), 4000); // never block an upload indefinitely
+  });
+}
+
+function compressImageToDataURL(file, maxDim=900, quality=0.82){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let {width,height} = img;
+        if(width>maxDim || height>maxDim){
+          if(width>height){ height=Math.round(height*maxDim/width); width=maxDim; }
+          else { width=Math.round(width*maxDim/height); height=maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width=width; canvas.height=height;
+        canvas.getContext('2d').drawImage(img,0,0,width,height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function setSharedImage(key, file){
+  const dataUrl = await compressImageToDataURL(file);
+  await dbSet(key, dataUrl, true);
+  return dataUrl;
+}
+async function getSharedImage(key){ return (await dbGet(key, true)) || null; }
+
+/* Opens a native file picker for a single image and hands back the File. */
+function pickImage(onPicked){
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.addEventListener('change', ()=>{ if(input.files[0]) onPicked(input.files[0]); });
+  input.click();
+}
+
+/* ============ UTIL ============ */
+/* ============ HOME OVERRIDE ============ */
+/* After scanning a QR code, that event page temporarily takes over the
+   Home tab for the rest of this browsing session — tapping Home from any
+   other screen returns to that event instead of the normal landing page.
+   Pressing the browser/device Back button once is what restores the
+   original Home screen. */
+function getHomeOverride(){ return sessionStorage.getItem('fp_home_override'); }
+function setHomeOverride(hash){ sessionStorage.setItem('fp_home_override', hash); }
+function clearHomeOverride(){ sessionStorage.removeItem('fp_home_override'); }
+window.addEventListener('popstate', ()=>{
+  if(getHomeOverride()){ clearHomeOverride(); navlinks(); }
+});
+
+/* Loads a photo/video grid in small batches as the user scrolls, instead
+   of decoding hundreds of images at once — keeps things smooth on phones
+   and avoids the tab slowing down or crashing on large galleries. */
+let _activeGridObservers = new Set();
+function renderInfiniteGrid(gridEl, items, renderItemFn, pageSize=10){
+  let cursor = 0;
+  const sentinel = h(`<div style="grid-column:1/-1; height:1px;"></div>`);
+  gridEl.appendChild(sentinel);
+  const observer = new IntersectionObserver(entries=>{
+    if(!gridEl.isConnected){ observer.disconnect(); _activeGridObservers.delete(observer); return; }
+    if(entries.some(e=>e.isIntersecting)) loadMore();
+  }, {rootMargin:'500px'});
+  _activeGridObservers.add(observer);
+  function loadMore(){
+    const next = items.slice(cursor, cursor+pageSize);
+    next.forEach(item=>gridEl.insertBefore(renderItemFn(item), sentinel));
+    cursor += next.length;
+    if(cursor >= items.length){ observer.disconnect(); _activeGridObservers.delete(observer); sentinel.remove(); }
+  }
+  observer.observe(sentinel);
+  loadMore();
+}
+
+function toast(msg, kind='ok'){
+  const wrap = document.getElementById('toastwrap');
+  const el = document.createElement('div');
+  el.className='toast glass';
+  el.style.color = kind==='err' ? 'var(--danger)' : 'var(--text)';
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2200);
+}
+function fmtSize(bytes){
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(0)+' KB';
+  return (bytes/1024/1024).toFixed(1)+' MB';
+}
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined,{month:'short', day:'numeric', year:'numeric'});
+}
+function h(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+function qs(sel,el=document){ return el.querySelector(sel); }
+function qsa(sel,el=document){ return [...el.querySelectorAll(sel)]; }
+
+async function downloadPhoto(photo, sourceLabel){
+  toast('Downloading…');
+  try{
+    const res = await fetch(photo.url);
+    const blob = await res.blob();
+    const id = 'f_'+photo.id+'_'+Date.now();
+    let posterBlob = null;
+    if(photo.type==='video'){
+      try{ posterBlob = await captureVideoPoster(blob); }catch(e){ /* fall back to no poster */ }
+    }
+    await FilesDB.add({
+      id, name: (photo.type==='video'?'video_':'photo_')+photo.id+'.jpg',
+      type: photo.type, size: blob.size, blob, posterBlob,
+      downloadedAt: Date.now(), source: sourceLabel||'Event'
+    });
+    // also trigger a real save-to-device via anchor download
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (photo.type==='video'?'fotopediya_video_':'fotopediya_photo_')+photo.id+'.jpg';
+    a.click();
+    toast('Saved to your device & Files');
+  }catch(e){
+    toast('Download failed — check connection', 'err');
+  }
+}
+
+/* ============ ROUTER ============ */
+function currentRoute(){
+  const hash = location.hash.replace(/^#/,'') || '/home';
+  return hash;
+}
+window.addEventListener('hashchange', render);
+window.addEventListener('DOMContentLoaded', async ()=>{
+  document.getElementById('mobileScanBtn')?.addEventListener('click', openQRScanner);
+  await Store.boot();
+  render();
+});
+
+let _navSignature = '';
+function navlinks(){
+  const route = currentRoute();
+  const isPhotog = Store.session?.role === 'photographer';
+  const middle = isPhotog
+    ? {href:'#/photographer', label:'Studio', icon:ICON.camera, match:/^\/photographer/}
+    : {href:'#/book', label:'Book', icon:ICON.camera, match:/^\/book/};
+  const homeOverride = getHomeOverride();
+  const homeItem = homeOverride
+    ? {href:homeOverride, label:'Home', icon:ICON.home, match:new RegExp('^'+homeOverride.replace('#','').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$')}
+    : {href:'#/home', label:'Home', icon:ICON.home, match:/^\/home|^\/$/};
+  const items = [
+    homeItem,
+    {href:'#/files', label:'Files', icon:ICON.files, match:/^\/files/},
+    middle,
+    {href:'#/profile', label:'Profile', icon:ICON.profile, match:/^\/profile|^\/login|^\/register/},
+  ];
+
+  const signature = items.map(it=>it.href).join('|');
+  const rebuild = signature !== _navSignature;
+  _navSignature = signature;
+
+  if(rebuild){
+    // Structure changed (e.g. role switched Book<->Studio) — full rebuild,
+    // starting with nothing active so the very next class toggle transitions in.
+    qs('#bottomnavlinks').innerHTML = items.map(it=>`
+      <a href="${it.href}" class="bn-item" data-href="${it.href}">${it.icon}<span>${it.label}</span></a>
+    `).join('');
+    qs('#topnavlinks').innerHTML = items.map(it=>`
+      <a href="${it.href}" class="nav-link" data-href="${it.href}">${it.label}</a>
+    `).join('');
+  }
+
+  // Only toggle the active class on existing elements — this is what lets
+  // the CSS transitions (background/color) actually play on tab switches
+  // instead of snapping instantly on a freshly-rebuilt element.
+  qsa('#bottomnavlinks .bn-item').forEach(el=>{
+    const it = items.find(i=>i.href===el.dataset.href);
+    el.classList.toggle('active', !!it && it.match.test(route));
+  });
+  qsa('#topnavlinks .nav-link').forEach(el=>{
+    const it = items.find(i=>i.href===el.dataset.href);
+    el.classList.toggle('active', !!it && it.match.test(route));
+  });
+}
+
+function render(){
+  // Clean up any infinite-scroll observers from the previous screen before
+  // wiping its DOM — otherwise they keep watching detached elements forever.
+  _activeGridObservers.forEach(o=>o.disconnect());
+  _activeGridObservers.clear();
+  window.scrollTo(0,0);
+  navlinks();
+  const route = currentRoute();
+  const app = qs('#app');
+  const [_, base, p1, p2, p3] = route.split('/');
+
+  if(route==='/home' || route==='/'){ app.innerHTML=''; app.appendChild(ViewHome()); }
+  else if(base==='event' && p2==='facescan'){ app.innerHTML=''; app.appendChild(ViewFaceScan(p1)); }
+  else if(base==='event' && p2==='results'){ app.innerHTML=''; app.appendChild(ViewResults(p1)); }
+  else if(base==='event'){ app.innerHTML=''; app.appendChild(ViewEvent(p1)); }
+  else if(base==='files'){ app.innerHTML=''; app.appendChild(ViewFiles()); }
+  else if(base==='book'){ app.innerHTML=''; app.appendChild(ViewBookPhotographers()); }
+  else if(base==='booking' && p1){ app.innerHTML=''; app.appendChild(ViewBookingDetail(p1)); }
+  else if(base==='p' && p1){ app.innerHTML=''; app.appendChild(ViewPhotogPublicProfile(p1)); }
+  else if(base==='plans' && p1){ app.innerHTML=''; app.appendChild(ViewPhotographerPlans(p1)); }
+  else if(base==='profile'){ app.innerHTML=''; app.appendChild(ViewProfile()); }
+  else if(base==='login'){ app.innerHTML=''; app.appendChild(ViewAuth('login')); }
+  else if(base==='register'){ app.innerHTML=''; app.appendChild(ViewAuth('register', p1)); }
+  else if(base==='photographer' && p1==='create-event'){ app.innerHTML=''; app.appendChild(ViewCreateEvent()); }
+  else if(base==='photographer' && p1){ app.innerHTML=''; app.appendChild(ViewPhotogEvent(p1)); }
+  else if(base==='photographer'){ app.innerHTML=''; app.appendChild(ViewPhotogDashboard()); }
+  else { app.innerHTML=''; app.appendChild(ViewHome()); }
+}
+
+/* ============ HOME ============ */
+function ViewHome(){
+  const wrap = h(`<div class="fade-in">
+    <section class="hero container">
+      <h1>Find Your<br/>Moments.</h1>
+      <p class="sub">Scan. Smile. Discover every photo you're in.</p>
+      <div style="margin-top:34px;" id="apertureslot"></div>
+    </section>
+
+    <section class="section container">
+      <div class="section-kicker eyebrow" style="text-align:center;">How Fotopediya Works</div>
+      <div class="grid-3">
+        <div class="card feature"><span class="num">01</span><h3>Scan the QR</h3><p>Find the Fotopediya code at the venue and scan it — no app install, no account required.</p></div>
+        <div class="card feature"><span class="num">02</span><h3>Scan your face</h3><p>A quick, private on-device face scan searches only that event's gallery — never the whole platform.</p></div>
+        <div class="card feature"><span class="num">03</span><h3>Download instantly</h3><p>Your matching photos and videos appear in seconds, ready to save straight to your device.</p></div>
+      </div>
+    </section>
+
+    <section class="section container">
+      <div class="glass" style="padding:26px; display:grid; gap:18px; grid-template-columns:1fr; align-items:center;">
+        <div>
+          <div class="eyebrow">For Photographers</div>
+          <h2 class="section-title">Your Photos. Their Memories.<br/>One Smart Gallery.</h2>
+          <p style="color:var(--text-muted); font-size:14px; margin-top:10px; max-width:480px;">Create QR-linked event galleries, host unlimited photos and video, and let every guest find their own moments — automatically.</p>
+          <a href="#/register/photographer" class="btn btn-gold" style="margin-top:18px;">Start as a Photographer</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container">
+      <div class="grid-3">
+        <div class="card feature"><span class="num">${ICON.face}</span><h3>Face Search</h3><p>Privacy-conscious, on-device matching — raw face images are never stored.</p></div>
+        <div class="card feature"><span class="num">${ICON.lock}</span><h3>Secure Cloud Gallery</h3><p>Every event is private by default and isolated from every other event.</p></div>
+        <div class="card feature"><span class="num">${ICON.qr}</span><h3>QR Event Sharing</h3><p>One scan takes guests straight from the venue into the gallery.</p></div>
+      </div>
+    </section>
+
+    <section class="section container" style="text-align:center; padding-bottom:20px;">
+      <div class="eyebrow">Testing on two screens?</div>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Point another device's scanner at this code to jump into the demo event.</p>
+      <div id="homeqr" style="width:150px; height:150px; margin:0 auto; border-radius:16px; overflow:hidden; background:#fff; padding:10px;"></div>
+    </section>
+  </div>`);
+
+  // aperture scan button
+  const ap = h(`<button class="aperture-btn pulse" id="scanBtnHome" aria-label="Scan Event QR">
+      <div class="ring"></div>
+      <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+      <div class="aperture-core">
+        <div>
+          <div style="margin:0 auto 6px;">${ICON.scan}</div>
+          <div class="serif" style="font-size:15px;">Scan Event QR</div>
+        </div>
+      </div>
+    </button>`);
+  wrap.querySelector('#apertureslot').appendChild(ap);
+  ap.addEventListener('click', openQRScanner);
+
+  setTimeout(()=>{
+    const target = wrap.querySelector('#homeqr');
+    if(target && window.QRCode){
+      new QRCode(target, { text: location.origin+location.pathname+'#/event/'+DEMO_EVENT.id, width:130, height:130, colorDark:'#0a0908', colorLight:'#ffffff' });
+    }
+  },0);
+
+  return wrap;
+}
+
+/* ============ QR SCANNER OVERLAY ============ */
+function openQRScanner(){
+  const overlay = h(`<div class="overlay" id="qrOverlay">
+    <div class="sheet" style="max-width:420px; position:relative; padding-top:20px;">
+      <div class="sheet-handle"></div>
+      <button class="sheet-close" id="qrClose">${ICON.close}</button>
+      <h3 style="font-size:19px; margin-bottom:4px;">Scan Event QR</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">Point your camera at the Fotopediya code at the venue.</p>
+      <div style="position:relative; aspect-ratio:1; border-radius:20px; overflow:hidden; background:#000;">
+        <video class="scanvid" id="qrVideo" playsinline muted></video>
+        <div class="scan-frame"></div>
+        <div class="scan-line"></div>
+      </div>
+      <div id="qrStatus" style="text-align:center; margin-top:14px; font-size:13px; color:var(--text-muted);">Requesting camera access…</div>
+      <button class="btn btn-ghost btn-block" id="qrDemoBtn" style="margin-top:14px;">Skip — view demo event</button>
+    </div>
+  </div>`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+
+  let stream=null, raf=null, canvas=document.createElement('canvas'), ctx=canvas.getContext('2d');
+  const video = overlay.querySelector('#qrVideo');
+  const statusEl = overlay.querySelector('#qrStatus');
+
+  function close(){
+    if(raf) cancelAnimationFrame(raf);
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    overlay.classList.remove('open');
+    setTimeout(()=>overlay.remove(), 250);
+  }
+  overlay.querySelector('#qrClose').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.querySelector('#qrDemoBtn').addEventListener('click', ()=>{ close(); setHomeOverride('#/event/'+DEMO_EVENT.id); location.hash = '#/event/'+DEMO_EVENT.id; });
+
+  function tick(){
+    if(video.readyState === video.HAVE_ENOUGH_DATA && window.jsQR){
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code = jsQR(img.data, img.width, img.height);
+      if(code && code.data){
+        statusEl.textContent = 'Event found — opening gallery…';
+        const m = code.data.match(/#\/event\/([\w-]+)/);
+        const target = m ? '#/event/'+m[1] : '#/event/'+DEMO_EVENT.id;
+        setTimeout(()=>{ close(); setHomeOverride(target); location.hash = target; }, 400);
+        return;
+      }
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  navigator.mediaDevices?.getUserMedia({ video:{ facingMode:'environment' } })
+    .then(s=>{
+      stream=s; video.srcObject=s; video.play();
+      statusEl.textContent = 'Looking for a code…';
+      raf = requestAnimationFrame(tick);
+    })
+    .catch(()=>{
+      statusEl.textContent = 'Camera unavailable — try the demo instead.';
+    });
+}
+
+/* ============ EVENT PAGE ============ */
+function ViewEvent(id){
+  const wrap = h(`<div class="fade-in" id="eventRoot">
+    <div class="cover-wrap skel" style="border-radius:0;"></div>
+    <div class="container" style="margin-top:26px;">
+      <div class="skel" style="height:20px; width:60%; border-radius:8px; margin-bottom:10px;"></div>
+      <div class="skel" style="height:14px; width:40%; border-radius:8px;"></div>
+    </div>
+  </div>`);
+
+  (async ()=>{
+    const ev = await resolveEvent(id);
+    if(!ev){
+      wrap.innerHTML = `<div class="container empty" style="padding-top:70px;">
+        <div class="ic">${ICON.qr}</div>
+        <p>This event doesn't exist or the link is incorrect.</p>
+        <a href="#/home" class="btn btn-gold btn-sm" style="margin-top:16px;">Back home</a>
+      </div>`;
+      return;
+    }
+    if(isExpired(ev)){
+      const isOwner = isEventOwner(ev);
+      wrap.innerHTML = `<div class="container empty" style="padding-top:70px;">
+        <div class="ic">${ICON.lock}</div>
+        <h3 style="font-size:20px; margin-bottom:8px;">Event expired</h3>
+        <p>${ev.name} is no longer available to guests.</p>
+        ${isOwner ? `<div style="display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" id="renewBtn">Renew Event</button>
+          <a href="#/photographer/${ev.id}" class="btn btn-ghost btn-sm">Manage event</a>
+        </div>` : `<a href="#/home" class="btn btn-ghost btn-sm" style="margin-top:16px;">Back home</a>`}
+      </div>`;
+      wrap.querySelector('#renewBtn')?.addEventListener('click', async ()=>{
+        ev.expiry = new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+        await Store.saveEvent(ev);
+        toast('Event renewed for 7 days');
+        render();
+      });
+      return;
+    }
+
+    const photos = await getEventPhotos(ev, true);
+    const overrides = await getEventImageOverrides(ev.id);
+    const coverSrc = overrides.coverUrl||ev.cover;
+    await dbSet('last_viewed_event', { id: ev.id, name: ev.name, studio: ev.studio||'', cover: coverSrc, ts: Date.now() });
+    wrap.innerHTML = '';
+    wrap.className = 'fade-in';
+    wrap.appendChild(h(`<div class="cover-wrap" style="position:relative;">
+      <img src="${coverSrc}" alt="">
+      <button class="photo-edit-btn" id="eventBackBtn" aria-label="Back" style="top:14px; left:14px; bottom:auto; right:auto;">${ICON.chevronR.replace('m9 6 6 6-6 6','m15 6-6 6 6 6')}</button>
+    </div>`));
+    wrap.appendChild(h(`<div class="profile-head">
+      <img class="avatar" src="${overrides.avatarUrl||ev.avatar}" width="84" height="84" alt="">
+      <div style="padding-bottom:6px;">
+        <div class="eyebrow" style="margin-bottom:2px;">${new Date(ev.date).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}</div>
+        <h2 style="font-size:clamp(18px,5vw,22px);">${ev.name}</h2>
+      </div>
+    </div>`));
+    const body = h(`<div class="container" style="margin-top:14px;">
+      <p style="color:var(--text-muted); font-size:14px;">${ev.studio||''} ${ev.tagline?'· '+ev.tagline:''}</p>
+      <div class="action-row" style="margin-top:20px;">
+        <a href="#/plans/${ev.ownerUsername||'ambro'}" class="btn btn-ghost">${ICON.qr} View Plans</a>
+        <a href="#/p/${ev.ownerUsername||'ambro'}" class="btn btn-ghost">${ICON.profile} View Account</a>
+        <a href="#/event/${ev.id}/facescan" class="btn btn-gold">${ICON.face} Face Scanner</a>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:17px;">Event Gallery</h3>
+        <span class="mono" style="font-size:12px; color:var(--text-muted);">${photos.length} items</span>
+      </div>
+      <div class="photo-grid" id="eventGrid"></div>
+      <div style="text-align:center; margin:22px 0 8px;">
+        <a href="#/event/${ev.id}/facescan" class="btn btn-ghost btn-sm">Looking for yourself? Try Face Scanner ${ICON.chevronR}</a>
+      </div>
+    </div>`);
+    wrap.appendChild(body);
+    const grid = body.querySelector('#eventGrid');
+    if(photos.length===0){
+      grid.appendChild(h(`<div class="empty" style="grid-column:1/-1;"><p>No photos uploaded to this event yet.</p></div>`));
+    } else {
+      renderInfiniteGrid(grid, photos, p=>photoCard(p, ev.name), 10);
+    }
+    wrap.querySelector('#eventBackBtn').addEventListener('click', ()=>{
+      if(getHomeOverride() === location.hash){
+        clearHomeOverride();
+        location.hash = '#/home';
+      } else {
+        history.back();
+      }
+    });
+  })();
+
+  return wrap;
+}
+
+function photoCard(p, sourceLabel, showConfidence){
+  const fav = Store.favorites.has(p.id);
+  const card = h(`<div class="photo-card">
+    ${p.type==='video' ? `<div class="tag">${ICON.video}</div>` : ''}
+    ${showConfidence ? `<div class="tag conf mono">${(p.confidence*100|0)}%${p.confidence<0.85?' · possible':''}</div>` : ''}
+    <img src="${p.thumb}" loading="lazy" alt="">
+    <div class="actions">
+      <button class="mini-btn fav ${fav?'active':''}" data-act="fav">${ICON.heart}</button>
+      <button class="mini-btn" data-act="share">${ICON.share}</button>
+      <button class="mini-btn" data-act="dl">${ICON.download}</button>
+    </div>
+  </div>`);
+  card.querySelector('img').addEventListener('click', ()=>openLightbox(p));
+  card.querySelector('[data-act=fav]').addEventListener('click', e=>{
+    e.stopPropagation(); Store.toggleFav(p.id); e.currentTarget.classList.toggle('active');
+  });
+  card.querySelector('[data-act=share]').addEventListener('click', async e=>{
+    e.stopPropagation();
+    if(navigator.share){ try{ await navigator.share({title:'Fotopediya photo', url:p.url}); }catch(_){} }
+    else { navigator.clipboard?.writeText(p.url); toast('Link copied'); }
+  });
+  card.querySelector('[data-act=dl]').addEventListener('click', e=>{ e.stopPropagation(); downloadPhoto(p, sourceLabel); });
+  return card;
+}
+
+function openLightbox(p){
+  const media = p.type==='video'
+    ? `<video src="${p.url}" controls autoplay playsinline style="max-width:92vw; max-height:88vh; border-radius:18px; display:block; background:#000;"></video>`
+    : `<img src="${p.url}" style="max-width:92vw; max-height:88vh; border-radius:18px; display:block;">`;
+  const overlay = h(`<div class="overlay" id="lbOverlay" style="align-items:center;">
+    <div style="position:relative; max-width:92vw; max-height:88vh;">
+      <button class="sheet-close" id="lbClose" style="top:-10px; right:-10px;">${ICON.close}</button>
+      ${media}
+    </div>
+  </div>`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+  const close=()=>{
+    overlay.querySelector('video')?.pause();
+    overlay.classList.remove('open'); setTimeout(()=>overlay.remove(),250);
+  };
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.querySelector('#lbClose').addEventListener('click', close);
+}
+
+/* ============ FACE SCAN ============ */
+function ViewFaceScan(eventId){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;" id="faceRoot">
+    <div class="skel" style="height:20px; width:50%; border-radius:8px; margin:0 auto 10px;"></div>
+    <div class="skel" style="height:300px; max-width:420px; margin:20px auto; border-radius:28px;"></div>
+  </div>`);
+
+  (async ()=>{
+    const ev = await resolveEvent(eventId);
+    if(!ev){
+      wrap.innerHTML = `<div class="empty" style="padding-top:70px;"><p>This event doesn't exist or the link is incorrect.</p><a href="#/home" class="btn btn-gold btn-sm" style="margin-top:16px;">Back home</a></div>`;
+      return;
+    }
+    wrap.innerHTML = '';
+    wrap.className = 'fade-in container';
+    wrap.style.paddingTop = '26px';
+    wrap.appendChild(h(`<a href="#/event/${ev.id}" class="btn btn-ghost btn-sm" style="margin-bottom:16px;">&larr; Back to event</a>`));
+    wrap.appendChild(h(`<div class="eyebrow" style="text-align:center;">${ev.name}</div>`));
+    wrap.appendChild(h(`<h2 style="text-align:center; font-size:clamp(19px,5vw,24px); margin-bottom:18px;">Face Scanner</h2>`));
+    wrap.appendChild(h(`<div style="position:relative; max-width:420px; margin:0 auto; aspect-ratio:3/4; border-radius:28px; overflow:hidden; background:#000;">
+      <video class="facevid" id="faceVideo" playsinline muted></video>
+      <div class="faceid-wrap" id="faceOval">
+        <svg viewBox="0 0 120 120">
+          <circle class="faceid-track" cx="60" cy="60" r="54"/>
+          <circle class="faceid-progress" cx="60" cy="60" r="54"/>
+        </svg>
+      </div>
+    </div>`));
+    wrap.appendChild(h(`<p id="faceStatus" style="text-align:center; margin-top:16px; color:var(--text-muted); font-size:14px;">Position your face inside the frame</p>`));
+    wrap.appendChild(h(`<div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+      <button class="btn btn-gold" id="captureBtn" disabled>Scan My Face</button>
+    </div>`));
+    wrap.appendChild(h(`<p style="text-align:center; margin-top:18px; font-size:12px; color:var(--text-dim); max-width:340px; margin-left:auto; margin-right:auto;">
+      Face processing happens on your device. We search only ${ev.name}'s gallery — never the whole platform — and don't keep your face image.
+    </p>`));
+    // consent gate
+    showConsentSheet(()=>startFaceFlow(wrap, ev));
+  })();
+
+  return wrap;
+}
+
+function showConsentSheet(onAccept){
+  const overlay = h(`<div class="overlay" id="consentOverlay">
+    <div class="sheet" style="max-width:440px;">
+      <div class="sheet-handle"></div>
+      <div style="text-align:center; margin-bottom:6px;">${ICON.lock}</div>
+      <h3 style="text-align:center; font-size:19px; margin-bottom:8px;">Biometric Data Notice</h3>
+      <p style="color:var(--text-muted); font-size:13.5px; text-align:center; line-height:1.5;">
+        Fotopediya uses your device's camera to detect your face and search this event's gallery only.
+        Face data is processed temporarily on your device and is not stored after your search.
+        By continuing, you consent to this one-time face scan for this event.
+      </p>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-ghost" id="consentCancel" style="flex:1;">Not now</button>
+        <button class="btn btn-gold" id="consentOk" style="flex:1;">I Consent, Continue</button>
+      </div>
+    </div>
+  </div>`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+  const close=()=>{ overlay.classList.remove('open'); setTimeout(()=>overlay.remove(),250); };
+  overlay.querySelector('#consentCancel').addEventListener('click', ()=>{ close(); history.back(); });
+  overlay.querySelector('#consentOk').addEventListener('click', ()=>{ close(); onAccept(); });
+}
+
+/* ============ GENERIC CONFIRM SHEET (delete account / delete photo) ============ */
+function showConfirmSheet({title, message, confirmLabel='Confirm', cancelLabel='Cancel', danger=true, onConfirm}){
+  const overlay = h(`<div class="overlay" id="confirmOverlay">
+    <div class="sheet" style="max-width:400px;">
+      <div class="sheet-handle"></div>
+      <h3 style="text-align:center; font-size:clamp(17px,4.5vw,19px); margin-bottom:8px;">${title}</h3>
+      <p style="color:var(--text-muted); font-size:13.5px; text-align:center; line-height:1.5;">${message}</p>
+      <div style="display:flex; gap:10px; margin-top:22px;">
+        <button class="btn btn-ghost" id="confirmCancel" style="flex:1;">${cancelLabel}</button>
+        <button class="btn ${danger?'btn-danger':'btn-gold'}" id="confirmOk" style="flex:1;">${confirmLabel}</button>
+      </div>
+    </div>
+  </div>`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+  const close=()=>{ overlay.classList.remove('open'); setTimeout(()=>overlay.remove(),250); };
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.querySelector('#confirmCancel').addEventListener('click', close);
+  overlay.querySelector('#confirmOk').addEventListener('click', ()=>{ close(); onConfirm(); });
+}
+
+function deleteOwnAccount(){
+  showConfirmSheet({
+    title:'Delete account?',
+    message:'This permanently deletes your Fotopediya account, your events, and your saved photos. This cannot be undone.',
+    confirmLabel:'Delete Account',
+    danger:true,
+    onConfirm: async ()=>{
+      await Store.deleteAccount();
+      toast('Account deleted');
+      location.hash = '#/home';
+    }
+  });
+}
+
+let faceModelsReady = false;
+async function loadFaceModels(){
+  if(faceModelsReady) return true;
+  try{
+    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+    await Promise.race([
+      Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      ]),
+      new Promise((_,rej)=>setTimeout(()=>rej('timeout'), 7000))
+    ]);
+    faceModelsReady = true;
+    return true;
+  }catch(e){ return false; }
+}
+
+async function startFaceFlow(root, ev){
+  const video = root.querySelector('#faceVideo');
+  const oval = root.querySelector('#faceOval');
+  const status = root.querySelector('#faceStatus');
+  const btn = root.querySelector('#captureBtn');
+  let stream=null, detectRaf=null, modelsOk=false, faceFound=false;
+
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' } });
+    video.srcObject = stream; await video.play();
+  }catch(e){
+    status.textContent = 'Camera unavailable. Please allow camera access and retry.';
+    return;
+  }
+
+  status.textContent = 'Loading face detector…';
+  modelsOk = await loadFaceModels();
+
+  async function detectLoop(){
+    if(!root.isConnected) return;
+    if(modelsOk && window.faceapi){
+      try{
+        const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({inputSize:224, scoreThreshold:0.5}));
+        faceFound = !!det;
+      }catch(e){ faceFound = false; }
+    } else {
+      // fallback heuristic: assume centered after a short delay so demo remains usable offline
+      faceFound = true;
+    }
+    oval.classList.toggle('found', faceFound);
+    status.textContent = faceFound ? 'Face detected — ready to scan' : 'Position your face inside the frame';
+    btn.disabled = !faceFound;
+    detectRaf = setTimeout(detectLoop, 350);
+  }
+  detectLoop();
+
+  btn.addEventListener('click', async ()=>{
+    clearTimeout(detectRaf);
+    btn.disabled = true;
+    oval.classList.remove('found');
+    oval.classList.add('scanning');
+    status.textContent = 'Scanning…';
+    // trigger the ring-fill transition on the next frame
+    requestAnimationFrame(()=>requestAnimationFrame(()=>oval.classList.add('fill')));
+    await wait(900);
+    status.textContent = 'Finding your photos…';
+    await wait(1300);
+    oval.classList.remove('scanning','fill');
+    oval.classList.add('found','done');
+    status.textContent = 'Match found';
+    await wait(250);
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    const allPhotos = await getEventPhotos(ev, true);
+    const matches = allPhotos.filter(p=>p.hasFace);
+    sessionStorage.setItem('fp_last_matches', JSON.stringify(matches.map(p=>p.id)));
+    location.hash = '#/event/'+ev.id+'/results';
+  });
+}
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ============ RESULTS ============ */
+function ViewResults(eventId){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;" id="resultsRoot">
+    <div class="skel" style="height:20px; width:40%; border-radius:8px; margin:0 auto 14px;"></div>
+    <div class="photo-grid"><div class="skel" style="aspect-ratio:3/4; border-radius:12px;"></div><div class="skel" style="aspect-ratio:3/4; border-radius:12px;"></div></div>
+  </div>`);
+
+  (async ()=>{
+    const ev = await resolveEvent(eventId);
+    if(!ev){
+      wrap.innerHTML = `<div class="empty" style="padding-top:70px;"><p>This event doesn't exist or the link is incorrect.</p><a href="#/home" class="btn btn-gold btn-sm" style="margin-top:16px;">Back home</a></div>`;
+      return;
+    }
+    const allPhotos = await getEventPhotos(ev, true);
+    const matchIds = new Set(JSON.parse(sessionStorage.getItem('fp_last_matches')||'[]'));
+    let matches = allPhotos.filter(p=>matchIds.has(p.id));
+    if(matches.length===0) matches = allPhotos.slice(0,24); // fallback if visited directly
+
+    wrap.innerHTML = '';
+    wrap.className = 'fade-in container';
+    wrap.style.paddingTop = '26px';
+    wrap.appendChild(h(`<a href="#/event/${ev.id}" class="btn btn-ghost btn-sm" style="margin-bottom:16px;">&larr; Back to event</a>`));
+    wrap.appendChild(h(`<div style="text-align:center; margin-bottom:6px;">
+      <div class="eyebrow">Photos Found</div>
+      <h2 class="serif" style="font-size:clamp(26px,8vw,38px);">${matches.length} Photos</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:6px;">from ${ev.name} — matches under 85% are marked "possible"</p>
+    </div>`));
+    wrap.appendChild(h(`<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin:20px 0 14px; flex-wrap:wrap;">
+      <div class="segmented glass" id="filterSeg">
+        <button class="seg-item active" data-f="all">All</button>
+        <button class="seg-item" data-f="photo">Photos</button>
+        <button class="seg-item" data-f="video">Videos</button>
+      </div>
+      <div class="segmented glass" id="sortSeg">
+        <button class="seg-item active" data-s="latest">Latest</button>
+        <button class="seg-item" data-s="oldest">Oldest</button>
+      </div>
+    </div>`));
+    wrap.appendChild(h(`<div class="photo-grid" id="resultsGrid"></div>`));
+    wrap.appendChild(h(`<div style="text-align:center; margin:26px 0;"><button class="btn btn-ghost" id="dlAllBtn">Download all matches</button></div>`));
+
+    if(matches.length===0){
+      wrap.querySelector('#resultsGrid').appendChild(h(`<div class="empty" style="grid-column:1/-1;"><p>No matches found yet — try uploading photos to this event, or scan again.</p></div>`));
+    }
+
+    let filter='all', sort='latest';
+    function draw(){
+      const grid = wrap.querySelector('#resultsGrid');
+      grid.innerHTML='';
+      let list = matches.filter(p=> filter==='all' || p.type===filter);
+      list = [...list].sort((a,b)=> sort==='latest' ? b.ts-a.ts : a.ts-b.ts);
+      if(list.length===0){
+        grid.appendChild(h(`<div class="empty" style="grid-column:1/-1;">No items in this filter.</div>`));
+        return;
+      }
+      renderInfiniteGrid(grid, list, p=>photoCard(p, ev.name+' · Face Scan', true), 10);
+    }
+    wrap.querySelector('#filterSeg').addEventListener('click', e=>{
+      const b = e.target.closest('.seg-item'); if(!b) return;
+      qsa('.seg-item', wrap.querySelector('#filterSeg')).forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); filter=b.dataset.f; draw();
+    });
+    wrap.querySelector('#sortSeg').addEventListener('click', e=>{
+      const b = e.target.closest('.seg-item'); if(!b) return;
+      qsa('.seg-item', wrap.querySelector('#sortSeg')).forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); sort=b.dataset.s; draw();
+    });
+    wrap.querySelector('#dlAllBtn').addEventListener('click', async ()=>{
+      toast(`Downloading ${matches.length} items…`);
+      for(const p of matches.slice(0,8)){ await downloadPhoto(p, ev.name+' · Face Scan'); }
+      if(matches.length>8) toast('Tip: download the rest individually to avoid browser limits');
+    });
+    draw();
+  })();
+
+  return wrap;
+}
+
+/* ============ FILES (IndexedDB) ============ */
+function ViewFiles(){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <h2 style="font-size:clamp(19px,5vw,24px);">Files</h2>
+      <button class="btn btn-ghost btn-sm" id="clearAllBtn">Clear Local Storage</button>
+    </div>
+    <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Photos and videos you've downloaded, stored locally on this device.</p>
+    <div id="lastViewedSlot"></div>
+    <div id="filesList"></div>
+  </div>`);
+
+  (async ()=>{
+    const last = await dbGet('last_viewed_event');
+    if(last){
+      const slot = wrap.querySelector('#lastViewedSlot');
+      slot.appendChild(h(`<a href="#/event/${last.id}" class="card" style="display:flex; align-items:center; gap:12px; padding:12px; margin-bottom:18px;">
+        <img src="${last.cover}" style="width:56px;height:56px;border-radius:10px; object-fit:cover; flex-shrink:0;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Last viewed event</div>
+          <div style="font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${last.name}</div>
+          ${last.studio?`<div style="font-size:11.5px; color:var(--text-muted);">${last.studio}</div>`:''}
+        </div>
+        <span style="color:var(--text-dim);">${ICON.chevronR}</span>
+      </a>`));
+    }
+  })();
+
+  const fileUrlCache = new Map();
+  function fileThumbUrl(f){
+    const key = f.id+':thumb';
+    if(!fileUrlCache.has(key)) fileUrlCache.set(key, URL.createObjectURL(f.posterBlob || f.blob));
+    return fileUrlCache.get(key);
+  }
+  function fileFullUrl(f){
+    const key = f.id+':full';
+    if(!fileUrlCache.has(key)) fileUrlCache.set(key, URL.createObjectURL(f.blob));
+    return fileUrlCache.get(key);
+  }
+  function releaseFileUrls(id){
+    for(const key of [...fileUrlCache.keys()]){
+      if(key.startsWith(id+':')){ URL.revokeObjectURL(fileUrlCache.get(key)); fileUrlCache.delete(key); }
+    }
+  }
+
+  async function draw(){
+    const list = wrap.querySelector('#filesList');
+    const files = await FilesDB.all();
+    if(files.length===0){
+      list.innerHTML='';
+      list.appendChild(h(`<div class="empty">
+        <div class="ic">${ICON.files}</div>
+        <p>No downloaded files yet.</p>
+        <a href="#/home" class="btn btn-gold btn-sm" style="margin-top:16px;">Scan an event</a>
+      </div>`));
+      return;
+    }
+    list.innerHTML='';
+    files.forEach(f=>{
+      const thumbUrl = fileThumbUrl(f);
+      const row = h(`<div class="card" style="display:flex; align-items:center; gap:12px; padding:12px; margin-bottom:10px;">
+        <img src="${thumbUrl}" loading="lazy" style="width:56px;height:56px;border-radius:10px; object-fit:cover; flex-shrink:0;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f.name}</div>
+          <div class="mono" style="font-size:11px; color:var(--text-muted);">${fmtDate(f.downloadedAt)} · ${fmtSize(f.size)} · ${f.source||'Event'}</div>
+        </div>
+        <button class="mini-btn" data-act="open" style="position:static;">${ICON.open}</button>
+        <button class="mini-btn" data-act="del" style="position:static;">${ICON.trash}</button>
+      </div>`);
+      row.querySelector('[data-act=open]').addEventListener('click', ()=>window.open(fileFullUrl(f),'_blank'));
+      row.querySelector('[data-act=del]').addEventListener('click', async ()=>{ await FilesDB.remove(f.id); releaseFileUrls(f.id); toast('Deleted'); draw(); });
+      list.appendChild(row);
+    });
+  }
+  wrap.querySelector('#clearAllBtn').addEventListener('click', async ()=>{
+    if(confirm('Clear all locally downloaded files?')){
+      for(const url of fileUrlCache.values()) URL.revokeObjectURL(url);
+      fileUrlCache.clear();
+      await FilesDB.clear(); toast('Local storage cleared'); draw();
+    }
+  });
+  draw();
+  return wrap;
+}
+
+/* ============ BOOK A PHOTOGRAPHER ============ */
+function ViewBookPhotographers(){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;">
+    <div id="myBookingsSlot" style="margin-bottom:${Store.myBookings.length?'22px':'0'};"></div>
+    <div class="eyebrow" style="text-align:center;">For Guests & Clients</div>
+    <h2 style="font-size:clamp(19px,5vw,24px); text-align:center;">Book a Photographer</h2>
+    <p style="color:var(--text-muted); font-size:13.5px; text-align:center; margin-top:6px; max-width:380px; margin-left:auto; margin-right:auto;">
+      Browse photographers on Fotopediya, view their work, and book your slot.
+    </p>
+    <div class="field" style="margin-top:20px; margin-bottom:4px;">
+      <input type="text" id="photogSearchInput" placeholder="Search photographers or studios…">
+    </div>
+    <div id="photogList" style="margin-top:18px;">
+      <div class="skel" style="height:74px; border-radius:16px; margin-bottom:10px;"></div>
+      <div class="skel" style="height:74px; border-radius:16px;"></div>
+    </div>
+  </div>`);
+
+  if(Store.myBookings.length){
+    const slot = wrap.querySelector('#myBookingsSlot');
+    Store.myBookings.forEach(b=>slot.appendChild(renderBookingCard(b)));
+  }
+
+  let fullList = [];
+  const listEl = wrap.querySelector('#photogList');
+
+  async function renderList(query=''){
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? fullList.filter(p => (p.businessName||'').toLowerCase().includes(q) || (p.name||'').toLowerCase().includes(q))
+      : fullList;
+
+    listEl.innerHTML = '';
+    if(filtered.length===0){
+      listEl.appendChild(h(`<div class="empty"><p>${q ? `No photographers match "${query}".` : 'No photographers have listed themselves yet.'}</p></div>`));
+      return;
+    }
+    for(const p of filtered){
+      const avatarUrl = p._demo ? `https://picsum.photos/seed/ambropg/200/200` : (await getSharedImage('img:photog:avatar:'+p.username)) || `https://picsum.photos/seed/${p.username}pg/200/200`;
+      const card = h(`<div class="card" style="padding:14px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+          <img src="${avatarUrl}" style="width:52px;height:52px;border-radius:50%; object-fit:cover; flex-shrink:0;">
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:14.5px; font-weight:600;">${p.businessName||p.name} ${p._demo?'<span class="badge-role" style="margin-left:6px;">Demo</span>':''}</div>
+            <div style="font-size:12px; color:var(--text-muted);">${p.name}</div>
+          </div>
+        </div>
+        <div class="action-row" style="grid-template-columns:repeat(2,1fr);">
+          <a href="#/p/${p.username}" class="btn btn-ghost btn-sm">${ICON.profile} View Account</a>
+          <button class="btn btn-gold btn-sm" data-act="book">${ICON.qr} Book your slot</button>
+        </div>
+      </div>`);
+      card.querySelector('[data-act=book]').addEventListener('click', ()=>showBookingSheet(p));
+      listEl.appendChild(card);
+    }
+  }
+
+  (async ()=>{
+    const directory = (await dbGet('photographer_directory', true)) || [];
+    const demoEntry = { username:'ambro', name:'Ambro Studio', businessName: DEMO_EVENT.studio, phone: DEMO_EVENT.phone, whatsapp: DEMO_EVENT.whatsapp, _demo:true };
+    fullList = [demoEntry, ...directory.filter(p=>p.username!=='ambro')];
+    renderList(wrap.querySelector('#photogSearchInput').value);
+  })();
+
+  wrap.querySelector('#photogSearchInput').addEventListener('input', e=>renderList(e.target.value));
+
+  return wrap;
+}
+
+function showBookingSheet(p){
+  const overlay = h(`<div class="overlay" id="bookOverlay">
+    <div class="sheet" style="max-width:440px;">
+      <div class="sheet-handle"></div>
+      <button class="sheet-close" id="bookClose">${ICON.close}</button>
+      <h3 style="font-size:19px; margin-bottom:4px;">Book ${p.businessName||p.name}</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Send a booking request — they'll see it on their dashboard and can reach you back.</p>
+      <form id="bookForm">
+        <div class="field"><label>Your name</label><input required name="name" value="${Store.session?.name||''}"></div>
+        <div class="field"><label>Your phone / WhatsApp</label><input required name="contact" value="${Store.session?.phone||Store.session?.whatsapp||''}" placeholder="+91…"></div>
+        <div class="field"><label>Your email</label><input required type="email" name="email" value="${Store.session?.email||''}" placeholder="you@email.com"></div>
+
+        <div class="field"><label>Street address</label><input required name="street" placeholder="House no., street name"></div>
+        <div class="field-row">
+          <div class="field"><label>Landmark</label><input name="landmark" placeholder="Near…"></div>
+          <div class="field"><label>City</label><input required name="city" placeholder="City"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>State</label><input required name="state" placeholder="State"></div>
+          <div class="field"><label>PIN code</label><input required name="pincode" placeholder="682001" inputmode="numeric" pattern="[0-9]{4,8}"></div>
+        </div>
+
+        <div class="field"><label>Preferred date</label><input required type="date" name="date" id="bookDateInput"></div>
+        <div id="takenDatesNote" style="display:none; margin:-10px 0 14px;">
+          <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:6px;">Already booked dates</div>
+          <div id="takenDatesChips" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
+        <p id="dateError" style="display:none; color:var(--danger); font-size:12.5px; margin:-10px 0 14px;">That date is already booked — please pick another.</p>
+
+        <div class="field"><label>Message (optional)</label><textarea name="message" rows="3" placeholder="Tell them about your event…"></textarea></div>
+        <button class="btn btn-gold btn-block" type="submit">Send Booking Request</button>
+      </form>
+    </div>
+  </div>`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+  const close=()=>{ overlay.classList.remove('open'); setTimeout(()=>overlay.remove(),250); };
+  overlay.querySelector('#bookClose').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+
+  let takenDates = [];
+  (async ()=>{
+    const existing = (await dbGet('bookings:'+p.username, true)) || [];
+    takenDates = [...new Set(existing.filter(b=>b.date).map(b=>b.date))];
+    if(takenDates.length){
+      overlay.querySelector('#takenDatesNote').style.display = 'block';
+      const chips = overlay.querySelector('#takenDatesChips');
+      takenDates.forEach(d=>{
+        chips.appendChild(h(`<span style="font-size:11px; padding:4px 10px; border-radius:999px; color:var(--ok); font-weight:700;">${fmtDate(new Date(d).getTime())}</span>`));
+      });
+    }
+  })();
+
+  overlay.querySelector('#bookForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const date = fd.get('date');
+    const errEl = overlay.querySelector('#dateError');
+    if(!date || takenDates.includes(date)){
+      errEl.textContent = date ? 'That date is already booked — please pick another.' : 'Please select a date.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+    const address = [fd.get('street'), fd.get('landmark'), fd.get('city'), fd.get('state'), fd.get('pincode')]
+      .filter(Boolean).join(', ');
+    const booking = {
+      id: 'bk_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      name: fd.get('name'), contact: fd.get('contact'), email: fd.get('email'),
+      street: fd.get('street'), landmark: fd.get('landmark')||'', city: fd.get('city'), state: fd.get('state'), pincode: fd.get('pincode'),
+      address, date, message: fd.get('message')||'',
+      ts: Date.now()
+    };
+    const list = (await dbGet('bookings:'+p.username, true)) || [];
+    list.unshift(booking);
+    await dbSet('bookings:'+p.username, list, true);
+    await Store.addMyBooking({
+      id: booking.id, photographerUsername: p.username, businessName: p.businessName||p.name,
+      date, createdAt: booking.ts
+    });
+    toast('Booking request sent');
+    close();
+  });
+}
+
+/* Booking status card: an animated line that starts yellow (just booked,
+   plenty of time left), turns red as the date approaches, and green once
+   the event date has passed. */
+function renderBookingCard(b){
+  const dateTs = new Date(b.date).getTime();
+  const now = Date.now();
+  const totalSpan = Math.max(dateTs - b.createdAt, 1);
+  const elapsed = now - b.createdAt;
+  let pct = Math.min(100, Math.max(0, (elapsed/totalSpan)*100));
+  let state, label;
+  const daysLeft = Math.ceil((dateTs-now)/86400000);
+  if(now >= dateTs){ state='green'; pct=100; label='Completed'; }
+  else if(pct>=70){ state='red'; label = daysLeft<=0 ? 'Today!' : daysLeft+' day'+(daysLeft>1?'s':'')+' left'; }
+  else { state='yellow'; label = daysLeft+' day'+(daysLeft>1?'s':'')+' left'; }
+
+  const card = h(`<div class="card booking-card fade-in" style="padding:14px; margin-bottom:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div>
+        <div style="font-size:13.5px; font-weight:600;">${b.businessName}</div>
+        <div class="mono" style="font-size:11px; color:var(--text-muted); margin-top:2px;"><span class="label-dot ${state}"></span>${fmtDate(dateTs)} · ${label}</div>
+      </div>
+      <button class="mini-btn" data-act="dismiss" style="position:static;">${ICON.close}</button>
+    </div>
+    <div class="booking-progress"><div class="fill ${state}" id="fill-${b.id}"></div></div>
+    <a href="#/booking/${b.id}" class="btn btn-ghost btn-sm btn-block" style="margin-top:12px;">View Details ${ICON.chevronR}</a>
+  </div>`);
+  // animate the fill in on mount rather than snapping to width instantly
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const el = card.querySelector(`#fill-${b.id}`);
+    if(el) el.style.width = pct+'%';
+  }));
+  card.querySelector('[data-act=dismiss]').addEventListener('click', async ()=>{
+    await Store.removeMyBooking(b.id);
+    card.remove();
+  });
+  return card;
+}
+
+/* ============ BOOKING DETAIL ============ */
+function ViewBookingDetail(bookingId){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;" id="bkdRoot">
+    <a href="#/book" class="btn btn-ghost btn-sm" style="margin-bottom:16px;">&larr; Back to Book</a>
+    <div class="skel" style="height:20px; width:50%; border-radius:8px; margin-bottom:14px;"></div>
+    <div class="skel" style="height:120px; border-radius:16px;"></div>
+  </div>`);
+
+  (async ()=>{
+    const mine = Store.myBookings.find(b=>b.id===bookingId);
+    if(!mine){
+      wrap.innerHTML = `<div class="container empty" style="padding-top:70px;"><p>Booking not found on this device.</p><a href="#/book" class="btn btn-gold btn-sm" style="margin-top:16px;">Back to Book</a></div>`;
+      return;
+    }
+    const [directory, fullRecordList] = await Promise.all([
+      dbGet('photographer_directory', true),
+      dbGet('bookings:'+mine.photographerUsername, true)
+    ]);
+    const isDemo = mine.photographerUsername === 'ambro';
+    const photographer = isDemo
+      ? { username:'ambro', name:'Ambro Studio', businessName: DEMO_EVENT.studio, phone: DEMO_EVENT.phone, whatsapp: DEMO_EVENT.whatsapp }
+      : (directory||[]).find(p=>p.username===mine.photographerUsername);
+    const full = (fullRecordList||[]).find(r=>r.id===bookingId);
+
+    const dateTs = new Date(mine.date).getTime();
+    const now = Date.now();
+    const daysLeft = Math.ceil((dateTs-now)/86400000);
+    let statusLabel, state;
+    if(now >= dateTs){ state='green'; statusLabel='Completed'; }
+    else if(daysLeft<=5){ state='red'; statusLabel = daysLeft<=0?'Today!':daysLeft+' day'+(daysLeft>1?'s':'')+' left'; }
+    else { state='yellow'; statusLabel = daysLeft+' days left'; }
+
+    wrap.innerHTML = '';
+    wrap.className = 'fade-in container';
+    wrap.style.paddingTop = '26px';
+    wrap.appendChild(h(`<a href="#/book" class="btn btn-ghost btn-sm" style="margin-bottom:16px;">&larr; Back to Book</a>`));
+    wrap.appendChild(h(`<div class="eyebrow">Booking Details</div>`));
+    wrap.appendChild(h(`<h2 style="font-size:clamp(19px,5vw,24px); margin-bottom:14px;">${mine.businessName}</h2>`));
+
+    const card = h(`<div class="card" style="padding:16px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        <span class="label-dot ${state}"></span>
+        <span style="font-size:13.5px; font-weight:600;">${fmtDate(dateTs)}</span>
+        <span class="mono" style="font-size:11px; color:var(--text-muted); margin-left:auto;">${statusLabel}</span>
+      </div>
+      <div class="booking-progress" style="margin-bottom:16px;"><div class="fill ${state}" style="width:${state==='green'?100:Math.min(100,Math.max(0,((now-mine.createdAt)/Math.max(dateTs-mine.createdAt,1))*100))}%;"></div></div>
+      ${photographer ? `
+      <div class="action-row" style="margin-bottom:16px;">
+        <a href="tel:${photographer.phone||''}" class="btn btn-ghost">${ICON.phone} Phone</a>
+        <a href="https://wa.me/${photographer.whatsapp||''}" target="_blank" class="btn btn-gold">${ICON.whatsapp} WhatsApp</a>
+      </div>` : `<p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">Contact details unavailable.</p>`}
+      <div class="divider"></div>
+      ${full ? `
+      <div class="kv"><span style="color:var(--text-muted);">Your name</span><span>${full.name}</span></div>
+      <div class="kv"><span style="color:var(--text-muted);">Phone / WhatsApp</span><span>${full.contact}</span></div>
+      <div class="kv"><span style="color:var(--text-muted);">Email</span><span>${full.email||'—'}</span></div>
+      <div class="kv"><span style="color:var(--text-muted);">Address</span><span style="text-align:right; max-width:60%;">${full.address||'—'}</span></div>
+      ${full.message?`<div style="margin-top:12px;"><div style="color:var(--text-muted); font-size:12px; margin-bottom:4px;">Message</div><p style="font-size:13.5px;">${full.message}</p></div>`:''}
+      ` : `<p style="color:var(--text-muted); font-size:13px;">Full request details aren't available on this device.</p>`}
+    </div>`);
+    wrap.appendChild(card);
+
+    wrap.appendChild(h(`<button class="btn btn-danger btn-block" id="cancelBookingBtn" style="margin-top:16px;">Remove This Booking</button>`));
+    wrap.querySelector('#cancelBookingBtn').addEventListener('click', ()=>{
+      showConfirmSheet({
+        title:'Remove this booking?',
+        message:'This only removes it from your device — it does not cancel the request with the photographer.',
+        confirmLabel:'Remove',
+        onConfirm: async ()=>{ await Store.removeMyBooking(bookingId); toast('Removed'); location.hash='#/book'; }
+      });
+    });
+  })();
+
+  return wrap;
+}
+
+/* ============ PUBLIC PHOTOGRAPHER PROFILE ("View Account") ============ */
+function ViewPhotogPublicProfile(username){
+  const wrap = h(`<div class="fade-in" id="ppRoot">
+    <div class="cover-wrap skel" style="border-radius:0;"></div>
+    <div class="container" style="margin-top:26px;">
+      <div class="skel" style="height:20px; width:60%; border-radius:8px;"></div>
+    </div>
+  </div>`);
+
+  (async ()=>{
+    let p;
+    if(username==='ambro'){
+      p = { username:'ambro', name:'Ambro Studio', businessName: DEMO_EVENT.studio, phone: DEMO_EVENT.phone, whatsapp: DEMO_EVENT.whatsapp, _demo:true };
+    } else {
+      const directory = (await dbGet('photographer_directory', true)) || [];
+      p = directory.find(x=>x.username===username);
+    }
+    if(!p){
+      wrap.innerHTML = `<div class="container empty" style="padding-top:70px;"><p>This photographer couldn't be found.</p><a href="#/book" class="btn btn-gold btn-sm" style="margin-top:16px;">Back to Book</a></div>`;
+      return;
+    }
+
+    const [avatarUrl, coverUrl] = p._demo
+      ? [`https://picsum.photos/seed/ambropg/200/200`, `https://picsum.photos/seed/ambrocover/1200/500`]
+      : await Promise.all([getSharedImage('img:photog:avatar:'+p.username), getSharedImage('img:photog:cover:'+p.username)]);
+
+    let photos = (await UploadsDB.allForEvent('portfolio:'+p.username)).filter(ph=>ph.isPublic);
+    if(p._demo){
+      photos.push(...(await getEventPhotos(DEMO_EVENT, true)));
+    } else {
+      const eventIds = (await dbGet('photographer_events:'+p.username, true)) || [];
+      const events = (await Promise.all(eventIds.map(id=>resolveEvent(id)))).filter(Boolean);
+      for(const ev of events){ photos.push(...(await getEventPhotos(ev, true))); }
+    }
+    photos.sort((a,b)=>b.ts-a.ts);
+
+    wrap.innerHTML = '';
+    wrap.className = 'fade-in';
+    wrap.appendChild(h(`<div class="cover-wrap" style="position:relative;">
+      <img src="${coverUrl||`https://picsum.photos/seed/${p.username}cover/1200/500`}" alt="">
+      <button class="photo-edit-btn" id="ppBackBtn" aria-label="Back" style="top:14px; left:14px; bottom:auto; right:auto;">${ICON.chevronR.replace('m9 6 6 6-6 6','m15 6-6 6 6 6')}</button>
+    </div>`));
+    wrap.appendChild(h(`<div class="profile-head">
+      <img class="avatar" src="${avatarUrl||`https://picsum.photos/seed/${p.username}pg/200/200`}" width="84" height="84" alt="">
+      <div style="padding-bottom:6px;"><span class="badge-role">Photographer ${p._demo?'· Demo':''}</span></div>
+    </div>`));
+    const body = h(`<div class="container" style="margin-top:14px;">
+      <h2 style="font-size:clamp(18px,5vw,22px);">${p.businessName||p.name}</h2>
+      <p style="color:var(--text-muted); font-size:13.5px;">${p.name}</p>
+      <div class="action-row" style="margin-top:18px; grid-template-columns:1fr;">
+        <button class="btn btn-gold" id="bookSlotBtn">${ICON.qr} Book your slot</button>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:17px;">Portfolio</h3>
+        <span class="mono" style="font-size:12px; color:var(--text-muted);">${photos.length} items</span>
+      </div>
+      <div class="photo-grid" id="ppGrid"></div>
+    </div>`);
+    wrap.appendChild(body);
+    const grid = body.querySelector('#ppGrid');
+    if(photos.length===0){
+      grid.appendChild(h(`<div class="empty" style="grid-column:1/-1;"><p>No uploaded work visible yet — portfolio photos show up here once uploaded from the photographer's own device.</p></div>`));
+    } else {
+      renderInfiniteGrid(grid, photos, ph=>photoCard(ph, p.businessName||p.name), 10);
+    }
+    body.querySelector('#bookSlotBtn').addEventListener('click', ()=>showBookingSheet(p));
+    wrap.querySelector('#ppBackBtn').addEventListener('click', ()=>history.back());
+  })();
+
+  return wrap;
+}
+
+/* ============ VIEW PLANS ============ */
+function ViewPhotographerPlans(username){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;" id="plansRoot">
+    <a href="#/book" class="btn btn-ghost btn-sm" style="margin-bottom:16px;">&larr; Back</a>
+    <div class="skel" style="height:20px; width:50%; border-radius:8px;"></div>
+  </div>`);
+
+  (async ()=>{
+    let p;
+    if(username==='ambro'){
+      p = { username:'ambro', name:'Ambro Studio', businessName: DEMO_EVENT.studio, phone: DEMO_EVENT.phone, whatsapp: DEMO_EVENT.whatsapp, _demo:true };
+    } else {
+      const directory = (await dbGet('photographer_directory', true)) || [];
+      p = directory.find(x=>x.username===username);
+    }
+    if(!p){
+      wrap.innerHTML = `<div class="empty" style="padding-top:70px;"><p>This photographer couldn't be found.</p><a href="#/book" class="btn btn-gold btn-sm" style="margin-top:16px;">Back to Book</a></div>`;
+      return;
+    }
+
+    const plans = [
+      { name:'Essential', desc:'Solo coverage for smaller ceremonies and functions.', points:['4 hours coverage','1 photographer','200+ edited photos'] },
+      { name:'Premium', desc:'Full-day coverage for weddings and receptions.', points:['Full-day coverage','2 photographers','800+ edited photos','Highlight video'] },
+      { name:'Signature', desc:'Multi-day, multi-event wedding coverage.', points:['Multi-day coverage','Full team','Unlimited photos','Cinematic film','Pre-wedding shoot'] },
+    ];
+
+    wrap.innerHTML = '';
+    wrap.className = 'fade-in container';
+    wrap.style.paddingTop = '26px';
+    wrap.appendChild(h(`<button class="btn btn-ghost btn-sm" id="plansBackBtn" style="margin-bottom:16px;">&larr; Back</button>`));
+    wrap.appendChild(h(`<div class="eyebrow">${p.businessName||p.name}</div>`));
+    wrap.appendChild(h(`<h2 style="font-size:clamp(19px,5vw,24px); margin-bottom:6px;">Packages & Plans</h2>`));
+    wrap.appendChild(h(`<p style="color:var(--text-muted); font-size:13px; margin-bottom:20px;">Sample packages — reach out to confirm exact pricing and availability.</p>`));
+
+    plans.forEach(plan=>{
+      const card = h(`<div class="card" style="padding:18px; margin-bottom:14px;">
+        <h3 style="font-size:16px; margin-bottom:4px;">${plan.name}</h3>
+        <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">${plan.desc}</p>
+        <div>${plan.points.map(pt=>`<div class="kv" style="padding:7px 0;"><span>${pt}</span><span style="color:var(--ok);">✓</span></div>`).join('')}</div>
+      </div>`);
+      wrap.appendChild(card);
+    });
+
+    const bookBtn = h(`<button class="btn btn-gold btn-block" style="margin-top:8px;">${ICON.qr} Book your slot</button>`);
+    bookBtn.addEventListener('click', ()=>showBookingSheet(p));
+    wrap.appendChild(bookBtn);
+    wrap.querySelector('#plansBackBtn').addEventListener('click', ()=>history.back());
+  })();
+
+  return wrap;
+}
+
+/* ============ PROFILE ============ */
+function ViewProfile(){
+  if(!Store.session){
+    return h(`<div class="fade-in container" style="padding-top:60px; text-align:center;">
+      <div class="aperture-btn" style="margin-bottom:26px;"><div class="ring"></div>
+        <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+        <div class="aperture-core">${ICON.profile}</div>
+      </div>
+      <h2 style="font-size:clamp(19px,5vw,24px);">Welcome to Fotopediya</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:8px;">Sign in to manage your photos, or create an account to get started.</p>
+      <div style="display:flex; flex-direction:column; gap:10px; max-width:280px; margin:24px auto 0;">
+        <a href="#/login" class="btn btn-gold btn-block">Login</a>
+        <a href="#/register" class="btn btn-ghost btn-block">Create Account</a>
+      </div>
+    </div>`);
+  }
+  const s = Store.session;
+  const isPhotog = s.role==='photographer';
+  const imgPrefix = isPhotog ? 'photog' : 'user';
+
+  const wrap = h(`<div class="fade-in">
+    <div class="cover-wrap" id="coverWrap">
+      <img id="coverImg" src="https://picsum.photos/seed/${s.username}cover/1200/500" alt="">
+      ${isPhotog ? '' : `<button class="photo-edit-btn cover-edit-btn" id="coverEditBtn" aria-label="Change cover photo">${ICON.camera}</button>`}
+    </div>
+    <div class="profile-head">
+      <div class="avatar-wrap">
+        <img class="avatar" id="avatarImg" src="https://picsum.photos/seed/${s.username}/200/200" width="84" height="84" alt="">
+        ${isPhotog ? '' : `<button class="photo-edit-btn avatar-edit-btn" id="avatarEditBtn" aria-label="Change profile photo">${ICON.camera}</button>`}
+      </div>
+      <div style="padding-bottom:6px;"><span class="badge-role">${isPhotog?'Photographer':'Normal User'}</span></div>
+    </div>
+    <div class="container" style="margin-top:14px;">
+      <h2 style="font-size:clamp(18px,5vw,22px);">${isPhotog ? (s.businessName||s.name) : s.name}</h2>
+      <p style="color:var(--text-muted); font-size:13.5px;">${isPhotog ? s.name+' · @'+s.username : '@'+s.username}</p>
+
+      <div class="action-row" style="margin-top:18px; grid-template-columns:repeat(3,1fr);">
+        <button class="btn btn-gold" id="myQrBtn">${ICON.qr} My QR</button>
+        <button class="btn btn-ghost" id="editBtn">Edit Profile</button>
+        <button class="btn btn-ghost" id="logoutBtn">${ICON.logout} Logout</button>
+      </div>
+
+      ${isPhotog ? `
+      <div class="grid-3 stats-grid" style="margin-top:18px;">
+        <div class="card stat"><div class="v">72<span style="font-size:13px;">GB</span></div><div class="l">of 100 GB used</div></div>
+        <div class="card stat"><div class="v" id="pgEventCount">…</div><div class="l">Active events</div></div>
+        <div class="card stat"><div class="v" id="pgBookingCount">…</div><div class="l">Booking requests</div></div>
+        <div class="card stat"><div class="v">318</div><div class="l">Face searches</div></div>
+      </div>
+      <div class="progressbar" style="margin-top:14px;"><div class="fill" style="width:72%;"></div></div>
+      <a href="#/photographer/create-event" class="btn btn-gold btn-block" style="margin-top:14px;">${ICON.plus} Create Event</a>
+      <a href="#/photographer" class="btn btn-ghost btn-block" style="margin-top:10px;">${ICON.camera} Edit Studio Profile & Portfolio</a>
+      <button class="btn btn-danger btn-block" id="deleteAccountBtn" style="margin-top:10px;">${ICON.trash} Delete Account</button>
+
+      <div class="divider"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size:16px;">Booking Requests</h3>
+        <span class="mono" style="font-size:12px; color:var(--text-muted);" id="bookingCountLabel"></span>
+      </div>
+      <div id="bookingsList" style="margin-bottom:8px;"><div class="skel" style="height:56px; border-radius:14px; margin-bottom:10px;"></div></div>
+
+      <div class="divider"></div>
+      <h3 style="font-size:16px; margin-bottom:12px;">Events</h3>
+      <div id="eventsList"><div class="skel" style="height:64px; border-radius:14px; margin-bottom:10px;"></div></div>
+      ` : `
+      <div class="grid-3 stats-grid" style="margin-top:18px;">
+        <div class="card stat"><div class="v" id="userStorageUsed">0<span style="font-size:13px;">MB</span></div><div class="l">Storage used</div></div>
+        <div class="card stat"><div class="v" id="userStorageBalance">5<span style="font-size:13px;">GB</span></div><div class="l">Balance remaining</div></div>
+      </div>
+      <div class="progressbar" style="margin-top:14px;"><div class="fill" id="userStorageFill" style="width:0%;"></div></div>
+      <button class="btn btn-danger btn-block" id="deleteAccountBtn" style="margin-top:14px;">${ICON.trash} Delete Account</button>
+      <div class="divider"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size:16px;">My Photos</h3>
+        <button class="btn btn-ghost btn-sm" id="uploadMyPhotoBtn">${ICON.camera} Upload Photo</button>
+      </div>
+      <div class="photo-grid" id="myPhotosGrid"></div>
+      `}
+    </div>
+  </div>`);
+
+  (async ()=>{
+    const [avatarUrl, coverUrl] = await Promise.all([
+      getSharedImage('img:'+imgPrefix+':avatar:'+s.username),
+      getSharedImage('img:'+imgPrefix+':cover:'+s.username)
+    ]);
+    if(avatarUrl) wrap.querySelector('#avatarImg').src = avatarUrl;
+    if(coverUrl) wrap.querySelector('#coverImg').src = coverUrl;
+  })();
+  wrap.querySelector('#coverEditBtn')?.addEventListener('click', ()=>{
+    pickImage(async file=>{
+      const dataUrl = await setSharedImage('img:'+imgPrefix+':cover:'+s.username, file);
+      wrap.querySelector('#coverImg').src = dataUrl;
+      toast('Cover photo updated');
+    });
+  });
+  wrap.querySelector('#avatarEditBtn')?.addEventListener('click', ()=>{
+    pickImage(async file=>{
+      const dataUrl = await setSharedImage('img:'+imgPrefix+':avatar:'+s.username, file);
+      wrap.querySelector('#avatarImg').src = dataUrl;
+      toast('Profile photo updated');
+    });
+  });
+
+  if(!isPhotog){
+  let myPhotos = Store.myPhotos;
+  const QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB free tier (mock quota)
+  function updateStorageStats(){
+    const usedBytes = myPhotos.reduce((sum,p)=>{
+      const dataUrl = p.thumb || p.url || '';
+      const base64 = dataUrl.split(',')[1] || '';
+      return sum + Math.round(base64.length * 0.75);
+    }, 0);
+    const usedMB = usedBytes / (1024*1024);
+    const balanceGB = Math.max(0, (QUOTA_BYTES - usedBytes) / (1024*1024*1024));
+    const pct = Math.min(100, (usedBytes / QUOTA_BYTES) * 100);
+    const usedEl = wrap.querySelector('#userStorageUsed');
+    const balEl = wrap.querySelector('#userStorageBalance');
+    const fillEl = wrap.querySelector('#userStorageFill');
+    if(usedEl) usedEl.innerHTML = (usedMB<1 ? usedMB.toFixed(2) : usedMB.toFixed(1)) + '<span style="font-size:13px;">MB</span>';
+    if(balEl) balEl.innerHTML = balanceGB.toFixed(2) + '<span style="font-size:13px;">GB</span>';
+    if(fillEl) fillEl.style.width = Math.max(pct, 1)+'%';
+  }
+  function drawMyPhotos(){
+    const grid = wrap.querySelector('#myPhotosGrid');
+    grid.innerHTML = '';
+    updateStorageStats();
+    if(myPhotos.length===0){
+      grid.appendChild(h(`<div class="empty" style="grid-column:1/-1;">
+        <div class="ic">${ICON.files}</div><p>No photos uploaded yet.</p>
+      </div>`));
+      return;
+    }
+    myPhotos.forEach(p=>{
+      const card = h(`<div class="photo-card">
+        <img src="${p.thumb}" loading="lazy">
+        <button class="mini-btn" data-act="delphoto" style="position:absolute; top:8px; right:8px;">${ICON.trash}</button>
+        <div class="actions" style="justify-content:space-between; align-items:center; padding:8px 10px;">
+          <span style="font-size:10.5px; font-weight:600; padding:4px 9px; border-radius:999px; background:rgba(10,9,8,0.6); color:#fff;">${p.isPublic?'Public':'Private'}</span>
+          <div class="switch ${p.isPublic?'on':''}" data-id="${p.id}"></div>
+        </div>
+      </div>`);
+      card.querySelector('.switch').addEventListener('click', async e=>{
+        p.isPublic=!p.isPublic; e.currentTarget.classList.toggle('on');
+        e.currentTarget.parentElement.querySelector('span').textContent = p.isPublic?'Public':'Private';
+        await Store.setMyPhotos(myPhotos);
+        toast(p.isPublic?'Photo is now public':'Photo is now private');
+      });
+      card.querySelector('[data-act=delphoto]').addEventListener('click', e=>{
+        e.stopPropagation();
+        showConfirmSheet({
+          title:'Delete this photo?',
+          message:'This removes the photo from your profile permanently.',
+          confirmLabel:'Delete Photo',
+          onConfirm: async ()=>{
+            myPhotos = myPhotos.filter(x=>x.id!==p.id);
+            await Store.setMyPhotos(myPhotos);
+            toast('Photo deleted');
+            drawMyPhotos();
+          }
+        });
+      });
+      grid.appendChild(card);
+    });
+  }
+  drawMyPhotos();
+  wrap.querySelector('#uploadMyPhotoBtn').addEventListener('click', ()=>{
+    pickImage(async file=>{
+      const dataUrl = await compressImageToDataURL(file, 700, 0.75);
+      myPhotos = [{ id:'mine_'+Date.now(), type:'photo', thumb:dataUrl, url:dataUrl, isPublic:false, ts:Date.now() }, ...myPhotos];
+      await Store.setMyPhotos(myPhotos);
+      toast('Photo uploaded');
+      drawMyPhotos();
+    });
+  });
+  }
+
+  if(isPhotog){
+    const drawEvents = async ()=>{
+      const owned = (await Promise.all(Store.myEventIds.map(id=>resolveEvent(id)))).filter(Boolean);
+      const events = [{...DEMO_EVENT, _demo:true}, ...owned];
+      wrap.querySelector('#pgEventCount').textContent = events.length;
+      const list = wrap.querySelector('#eventsList');
+      list.innerHTML = '';
+      events.forEach(ev=>{
+        const count = ev._demo ? DEMO_EVENT.photos.filter(p=>!Store.deletedDemoIds.has(p.id)).length : (ev.mediaCount||0);
+        const row = h(`<a href="#/photographer/${ev.id}" class="card" style="display:flex; align-items:center; gap:12px; padding:12px; margin-bottom:10px;">
+          <img src="${ev.cover}" style="width:56px;height:56px;border-radius:10px; object-fit:cover;">
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:14px; font-weight:600;">${ev.name} ${ev._demo?'<span class="badge-role" style="margin-left:6px;">Demo</span>':''}</div>
+            <div class="mono" style="font-size:11px; color:var(--text-muted);">${count} items · expires ${ev.expiry}</div>
+          </div>
+          ${ev._demo ? '' : `<button class="mini-btn" data-act="delevent" style="position:static; background:var(--surface); border:1px solid var(--border); color:var(--danger);">${ICON.trash}</button>`}
+          <span style="color:var(--text-dim);">${ICON.chevronR}</span>
+        </a>`);
+        row.querySelector('[data-act=delevent]')?.addEventListener('click', e=>{
+          e.preventDefault(); e.stopPropagation();
+          showConfirmSheet({
+            title:'Delete this event?',
+            message:`This permanently deletes "${ev.name}" and its gallery link. Guests will no longer be able to open it. This cannot be undone.`,
+            confirmLabel:'Delete Event',
+            onConfirm: async ()=>{
+              await Store.deleteEvent(ev.id);
+              toast('Event deleted');
+              drawEvents();
+            }
+          });
+        });
+        list.appendChild(row);
+      });
+    };
+    drawEvents();
+
+    const drawBookings = async ()=>{
+      const bookings = (await dbGet('bookings:'+s.username, true)) || [];
+      wrap.querySelector('#pgBookingCount').textContent = bookings.length;
+      wrap.querySelector('#bookingCountLabel').textContent = bookings.length+' total';
+      const bl = wrap.querySelector('#bookingsList');
+      bl.innerHTML = '';
+      if(bookings.length===0){
+        bl.appendChild(h(`<div class="empty" style="padding:24px 0;"><p>No booking requests yet.</p></div>`));
+        return;
+      }
+      bookings.forEach(b=>{
+        const row = h(`<div class="card" style="padding:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div>
+              <div style="font-size:14px; font-weight:600;">${b.name}</div>
+              <div class="mono" style="font-size:11px; color:var(--text-muted);">${b.date?fmtDate(new Date(b.date).getTime()):'No date given'} · ${fmtDate(b.ts)}</div>
+            </div>
+            <button class="mini-btn" data-act="cancel" style="position:static;">${ICON.close}</button>
+          </div>
+          ${b.message?`<p style="font-size:13px; color:var(--text-muted); margin-top:8px;">${b.message}</p>`:''}
+          <div class="action-row" style="grid-template-columns:repeat(2,1fr); margin-top:10px;">
+            <a href="tel:${b.contact}" class="btn btn-ghost btn-sm">${ICON.phone} Call</a>
+            <a href="https://wa.me/${(b.contact||'').replace(/[^0-9]/g,'')}" target="_blank" class="btn btn-gold btn-sm">${ICON.whatsapp} WhatsApp</a>
+          </div>
+        </div>`);
+        row.querySelector('[data-act=cancel]').addEventListener('click', ()=>{
+          showConfirmSheet({
+            title:'Cancel this booking?',
+            message: b.date
+              ? `This frees up ${fmtDate(new Date(b.date).getTime())} so someone else can book it.`
+              : 'This removes the booking request.',
+            confirmLabel:'Cancel Booking',
+            onConfirm: async ()=>{
+              const remaining = bookings.filter(x=>x.id!==b.id);
+              await dbSet('bookings:'+s.username, remaining, true);
+              toast('Booking cancelled — that date is available again');
+              drawBookings();
+            }
+          });
+        });
+        bl.appendChild(row);
+      });
+    };
+    drawBookings();
+  }
+
+  wrap.querySelector('#logoutBtn').addEventListener('click', async ()=>{ await Store.logout(); toast('Logged out'); location.hash='#/home'; });
+  wrap.querySelector('#editBtn').addEventListener('click', ()=>showEditProfileSheet());
+  wrap.querySelector('#myQrBtn').addEventListener('click', ()=>showQRSheet(location.origin+location.pathname+'#/'+(isPhotog?'p':'u')+'/'+s.username, isPhotog?'Your photographer profile':'Your public profile'));
+  wrap.querySelector('#deleteAccountBtn').addEventListener('click', deleteOwnAccount);
+  return wrap;
+}
+
+function showEditProfileSheet(){
+  const s = Store.session;
+  const overlay = h(`<div class="overlay" id="editOverlay">
+    <div class="sheet" style="max-width:420px;">
+      <div class="sheet-handle"></div>
+      <button class="sheet-close" id="editClose">${ICON.close}</button>
+      <h3 style="font-size:19px; margin-bottom:16px;">Edit Profile</h3>
+      <form id="editForm">
+        <div class="field"><label>Full name</label><input required name="name" value="${s.name||''}"></div>
+        <div class="field"><label>Username</label><input required name="username" value="${s.username||''}"></div>
+        ${s.role==='photographer'?`<div class="field"><label>Studio / Business name</label><input name="business" value="${s.businessName||''}"></div>`:''}
+        <div class="field"><label>Phone</label><input name="phone" value="${s.phone||''}" placeholder="+91…"></div>
+        <div class="field"><label>WhatsApp</label><input name="whatsapp" value="${s.whatsapp||''}" placeholder="e.g. 919876543210"></div>
+        <button class="btn btn-gold btn-block" type="submit">Save Changes</button>
+      </form>
+    </div>
+  </div>`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+  const close=()=>{ overlay.classList.remove('open'); setTimeout(()=>overlay.remove(),250); };
+  overlay.querySelector('#editClose').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.querySelector('#editForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const updated = {...s, name: fd.get('name'), username: fd.get('username'), phone: fd.get('phone')||'', whatsapp: fd.get('whatsapp')||''};
+    if(s.role==='photographer') updated.businessName = fd.get('business')||'';
+    await Store.saveSession(updated);
+    toast('Profile updated');
+    close();
+    render();
+  });
+}
+
+function showQRSheet(url, label){
+  const overlay = h(`<div class="overlay" id="qrshowOverlay">
+    <div class="sheet" style="max-width:380px; text-align:center;">
+      <div class="sheet-handle"></div>
+      <button class="sheet-close" id="qrshowClose">${ICON.close}</button>
+      <h3 style="font-size:18px; margin-bottom:4px;">${label}</h3>
+      <p class="mono" style="font-size:11px; color:var(--text-muted); margin-bottom:18px; word-break:break-all;">${url}</p>
+      <div id="qrshowTarget" style="width:200px; height:200px; margin:0 auto; border-radius:18px; overflow:hidden; background:#fff; padding:14px;"></div>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-ghost" style="flex:1;" id="qrCopyBtn">Copy link</button>
+        <button class="btn btn-gold" style="flex:1;" id="qrShareBtn">Share</button>
+      </div>
+    </div>
+  </div>`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+  setTimeout(()=>{
+    if(window.QRCode) new QRCode(overlay.querySelector('#qrshowTarget'), {text:url, width:172, height:172, colorDark:'#0a0908', colorLight:'#ffffff'});
+  },0);
+  const close=()=>{ overlay.classList.remove('open'); setTimeout(()=>overlay.remove(),250); };
+  overlay.querySelector('#qrshowClose').addEventListener('click', close);
+  overlay.querySelector('#qrCopyBtn').addEventListener('click', ()=>{ navigator.clipboard?.writeText(url); toast('Link copied'); });
+  overlay.querySelector('#qrShareBtn').addEventListener('click', async ()=>{
+    if(navigator.share){ try{await navigator.share({url});}catch(_){} } else { navigator.clipboard?.writeText(url); toast('Link copied'); }
+  });
+}
+
+/* ============ AUTH (mock — no server, but real & persisted on this device) ============ */
+function ViewAuth(mode, preRole){
+  const isLogin = mode==='login';
+  const wrap = h(`<div class="fade-in container" style="padding-top:50px; max-width:420px;">
+    <h2 style="font-size:clamp(19px,5vw,24px); text-align:center;">${isLogin?'Welcome back':'Create Account'}</h2>
+    <p style="text-align:center; color:var(--text-muted); font-size:13.5px; margin-top:6px;">${isLogin?'Log in to manage your photos':'Choose how to use Fotopediya'}</p>
+
+    <div class="segmented glass" id="roleSeg" style="display:flex; margin:22px auto; width:fit-content;">
+      <button class="seg-item ${preRole!=='photographer'?'active':''}" data-r="user">Normal User</button>
+      <button class="seg-item ${preRole==='photographer'?'active':''}" data-r="photographer">Photographer</button>
+    </div>
+
+    <form id="authForm">
+      ${!isLogin ? `<div class="field"><label>Full name</label><input required name="name" placeholder="Fathima Rahman"></div>
+      <div class="field" id="bizField" style="display:${preRole==='photographer'?'block':'none'};"><label>Studio / Business name</label><input name="business" placeholder="Ambro Photography"></div>
+      <div class="field"><label>Username</label><input required name="username" placeholder="fathima"></div>
+      <div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@email.com"></div>`
+      : `<div class="field"><label>Email or Username</label><input required name="identifier" placeholder="you@email.com or fathima"></div>`}
+      <div class="field"><label>Password</label><input required type="password" name="password" placeholder="••••••••" minlength="6"></div>
+      <button class="btn btn-black btn-block" type="submit" style="margin-top:6px;">${isLogin?'Login':'Create Account'}</button>
+    </form>
+    <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-top:18px;">
+      ${isLogin ? `New here? <a href="#/register" class="link-underline">Create an account</a>` : `Already have an account? <a href="#/login" class="link-underline">Login</a>`}
+    </p>
+  </div>`);
+
+  let role = preRole==='photographer' ? 'photographer' : 'user';
+  wrap.querySelector('#roleSeg').addEventListener('click', e=>{
+    const b = e.target.closest('.seg-item'); if(!b) return;
+    qsa('.seg-item', wrap.querySelector('#roleSeg')).forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); role=b.dataset.r;
+    if(!isLogin) wrap.querySelector('#bizField').style.display = role==='photographer' ? 'block':'none';
+  });
+  wrap.querySelector('#authForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    let session;
+    if(isLogin){
+      const identifier = (fd.get('identifier')||'').trim();
+      const username = identifier.includes('@') ? identifier.split('@')[0] : identifier;
+      const email = identifier.includes('@') ? identifier : Store.session?.email || (username+'@example.com');
+      session = { role, name: Store.session?.name || username, username, email };
+    } else {
+      const username = fd.get('username') || (fd.get('email')||'').split('@')[0] || 'user'+Date.now();
+      session = { role, name: fd.get('name'), username, email: fd.get('email'), businessName: fd.get('business')||'' };
+    }
+    await Store.saveSession(session);
+    toast(isLogin?'Welcome back!':'Account created');
+    location.hash = role==='photographer' ? '#/photographer' : '#/profile';
+  });
+  return wrap;
+}
+
+/* ============ PHOTOGRAPHER DASHBOARD ============ */
+function ViewPhotogDashboard(){
+  if(!Store.session || Store.session.role!=='photographer'){
+    return h(`<div class="fade-in container" style="padding-top:60px; text-align:center;">
+      <h2 style="font-size:clamp(18px,5vw,22px);">Photographer access</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:8px;">Log in with a photographer account to view your dashboard.</p>
+      <a href="#/register/photographer" class="btn btn-gold" style="margin-top:20px;">Register as Photographer</a>
+    </div>`);
+  }
+  const s = Store.session;
+
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;" id="pgdRoot">
+    <div class="cover-wrap" id="pgCoverWrap" style="height:150px;">
+      <img id="pgCoverImg" src="https://picsum.photos/seed/${s.username}pgcover/1200/500" alt="">
+      <button class="photo-edit-btn cover-edit-btn" id="pgCoverEditBtn" aria-label="Change cover photo">${ICON.camera}</button>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+      <div class="avatar-wrap">
+        <img class="avatar" id="pgAvatarImg" src="https://picsum.photos/seed/${s.username}pg/200/200" width="60" height="60" alt="">
+        <button class="photo-edit-btn avatar-edit-btn" id="pgAvatarEditBtn" aria-label="Change profile photo" style="width:24px;height:24px;">${ICON.camera}</button>
+      </div>
+      <div>
+        <div class="eyebrow">Studio Profile</div>
+        <h2 style="font-size:clamp(19px,5vw,24px);">${s.businessName||s.name}</h2>
+      </div>
+    </div>
+
+    <form id="studioForm" style="margin-top:20px;">
+      <div class="field"><label>Studio / Business Name</label><input name="business" value="${s.businessName||''}" placeholder="Ambro Photography"></div>
+      <div class="field-row">
+        <div class="field"><label>Phone</label><input name="phone" value="${s.phone||''}" placeholder="+91…"></div>
+        <div class="field"><label>WhatsApp</label><input name="whatsapp" value="${s.whatsapp||''}" placeholder="919876543210"></div>
+      </div>
+      <button class="btn btn-gold btn-block" type="submit">Save Details</button>
+    </form>
+
+    <div class="divider"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:16px;">Portfolio</h3>
+      <button class="btn btn-ghost btn-sm" id="portUploadBtn">${ICON.camera} Upload Photos/Videos</button>
+    </div>
+    <input type="file" id="portFileInput" accept="image/*,video/*" multiple style="display:none;">
+    <div id="portUploadZone" style="display:none; margin-bottom:14px;">
+      <div class="card" style="padding:16px;">
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:8px;"><span id="portUpLabel">Uploading…</span><span class="mono" id="portUpPct">0%</span></div>
+        <div class="progressbar"><div class="fill" id="portUpFill" style="width:0%;"></div></div>
+      </div>
+    </div>
+    <div class="photo-grid" id="portfolioGrid"><div class="skel" style="aspect-ratio:3/4; border-radius:12px;"></div><div class="skel" style="aspect-ratio:3/4; border-radius:12px;"></div></div>
+  </div>`);
+
+  (async ()=>{
+    const [avatarUrl, coverUrl] = await Promise.all([
+      getSharedImage('img:photog:avatar:'+s.username),
+      getSharedImage('img:photog:cover:'+s.username)
+    ]);
+    if(avatarUrl) wrap.querySelector('#pgAvatarImg').src = avatarUrl;
+    if(coverUrl) wrap.querySelector('#pgCoverImg').src = coverUrl;
+  })();
+  wrap.querySelector('#pgCoverEditBtn').addEventListener('click', ()=>{
+    pickImage(async file=>{
+      const dataUrl = await setSharedImage('img:photog:cover:'+s.username, file);
+      wrap.querySelector('#pgCoverImg').src = dataUrl;
+      toast('Cover photo updated');
+    });
+  });
+  wrap.querySelector('#pgAvatarEditBtn').addEventListener('click', ()=>{
+    pickImage(async file=>{
+      const dataUrl = await setSharedImage('img:photog:avatar:'+s.username, file);
+      wrap.querySelector('#pgAvatarImg').src = dataUrl;
+      toast('Profile photo updated');
+    });
+  });
+  wrap.querySelector('#studioForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const updated = {...s, businessName: fd.get('business')||'', phone: fd.get('phone')||'', whatsapp: fd.get('whatsapp')||''};
+    await Store.saveSession(updated);
+    toast('Studio details saved');
+  });
+
+  const portfolioKey = 'portfolio:'+s.username;
+  async function drawPortfolio(){
+    const grid = wrap.querySelector('#portfolioGrid');
+    const items = await UploadsDB.allForEvent(portfolioKey);
+    grid.innerHTML = '';
+    if(items.length===0){
+      grid.appendChild(h(`<div class="empty" style="grid-column:1/-1;"><p>No portfolio photos or videos yet.</p></div>`));
+      return;
+    }
+    renderInfiniteGrid(grid, items, p=>{
+      const card = h(`<div class="photo-card">
+        ${p.type==='video' ? `<div class="tag">${ICON.video}</div>` : ''}
+        <img src="${p.thumb}" loading="lazy">
+        <button class="mini-btn" data-act="del" style="position:absolute; top:8px; right:8px;">${ICON.trash}</button>
+        <div class="actions" style="justify-content:space-between; align-items:center; padding:8px 10px;">
+          <span style="font-size:10.5px; font-weight:600; padding:4px 9px; border-radius:999px; background:rgba(10,9,8,0.6); color:#fff;">${p.isPublic?'Public':'Private'}</span>
+          <div class="switch ${p.isPublic?'on':''}" data-id="${p.id}"></div>
+        </div>
+      </div>`);
+      card.querySelector('img').addEventListener('click', ()=>openLightbox(p));
+      card.querySelector('.switch').addEventListener('click', async e=>{
+        e.stopPropagation();
+        const next = !p.isPublic;
+        p.isPublic = next;
+        e.currentTarget.classList.toggle('on');
+        e.currentTarget.parentElement.querySelector('span').textContent = next?'Public':'Private';
+        await UploadsDB.setPublic(p.id, next);
+        toast(next?'Now visible on your public portfolio':'Hidden from your public portfolio');
+      });
+      card.querySelector('[data-act=del]').addEventListener('click', e=>{
+        e.stopPropagation();
+        showConfirmSheet({
+          title:'Delete this item?',
+          message:'This removes it from your public portfolio permanently.',
+          confirmLabel:'Delete',
+          onConfirm: async ()=>{ await UploadsDB.remove(p.id); toast('Deleted'); drawPortfolio(); }
+        });
+      });
+      return card;
+    }, 10);
+  }
+  drawPortfolio();
+
+  const portFileInput = wrap.querySelector('#portFileInput');
+  wrap.querySelector('#portUploadBtn').addEventListener('click', ()=>portFileInput.click());
+  portFileInput.addEventListener('change', async ()=>{
+    const files = [...portFileInput.files];
+    if(files.length===0) return;
+    const zone = wrap.querySelector('#portUploadZone'); zone.style.display='block';
+    const fill = wrap.querySelector('#portUpFill'); const pct = wrap.querySelector('#portUpPct'); const label = wrap.querySelector('#portUpLabel');
+    for(let i=0;i<files.length;i++){
+      const f = files[i];
+      label.textContent = `Uploading ${f.name}`;
+      await UploadsDB.add({ id:'up_'+portfolioKey+'_'+Date.now()+'_'+i, eventId:portfolioKey, type: f.type.startsWith('video')?'video':'photo', blob:f, ts:Date.now() });
+      const p = Math.round(((i+1)/files.length)*100);
+      fill.style.width=p+'%'; pct.textContent=p+'%';
+    }
+    toast(`${files.length} file${files.length>1?'s':''} uploaded`);
+    portFileInput.value = '';
+    setTimeout(()=>{ zone.style.display='none'; }, 900);
+    drawPortfolio();
+  });
+
+  return wrap;
+}
+
+function ViewPhotogEvent(eventId){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px;" id="pgeRoot">
+    <div class="skel" style="height:150px; border-radius:26px; margin-bottom:16px;"></div>
+    <div class="skel" style="height:20px; width:50%; border-radius:8px;"></div>
+  </div>`);
+
+  (async ()=>{
+    const ev = await resolveEvent(eventId);
+    if(!ev){
+      wrap.innerHTML = `<div class="empty" style="padding-top:70px;"><p>This event doesn't exist.</p><a href="#/photographer" class="btn btn-gold btn-sm" style="margin-top:16px;">Back to dashboard</a></div>`;
+      return;
+    }
+    const isDemo = ev.id === DEMO_EVENT.id;
+    const canManage = isDemo || isEventOwner(ev);
+    const overrides = await getEventImageOverrides(ev.id);
+    wrap.innerHTML = '';
+    wrap.className = 'fade-in container';
+    wrap.style.paddingTop = '26px';
+    wrap.appendChild(h(`<a href="#/photographer" class="btn btn-ghost btn-sm" style="margin-bottom:16px;">&larr; All events</a>`));
+    if(!canManage){
+      wrap.appendChild(h(`<div class="empty" style="padding-top:60px;">
+        <div class="ic">${ICON.lock}</div>
+        <p>You don't manage this event, so it can't be edited here.</p>
+        <a href="#/event/${ev.id}" class="btn btn-gold btn-sm" style="margin-top:16px;">View public page</a>
+      </div>`));
+      return;
+    }
+    wrap.appendChild(h(`<div class="cover-wrap" id="pgeCoverWrap" style="height:150px;">
+      <img id="pgeCoverImg" src="${overrides.coverUrl||ev.cover}" alt="">
+      <button class="photo-edit-btn cover-edit-btn" id="pgeCoverEditBtn" aria-label="Change cover photo">${ICON.camera}</button>
+    </div>`));
+    const body = h(`<div style="margin-top:16px;">
+      <div class="profile-head" style="margin-top:-46px; padding:0;">
+        <div class="avatar-wrap">
+          <img class="avatar" id="pgeAvatarImg" src="${overrides.avatarUrl||ev.avatar}" width="64" height="64" alt="">
+          <button class="photo-edit-btn avatar-edit-btn" id="pgeAvatarEditBtn" aria-label="Change profile photo" style="width:24px;height:24px;">${ICON.camera}</button>
+        </div>
+      </div>
+      <h2 style="font-size:clamp(18px,5vw,22px); margin-top:12px;">${ev.name} ${isDemo?'<span class="badge-role" style="margin-left:6px;">Demo</span>':''}</h2>
+      <p style="color:var(--text-muted); font-size:13.5px;">${ev.studio||''} · expires ${ev.expiry}</p>
+      ${isDemo?`<p style="font-size:12px; color:var(--text-dim); margin-top:6px;">This is the bundled sample event — uploads and deletes here are just for trying things out.</p>`:''}
+      <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+        <button class="btn btn-gold btn-sm" id="evQrBtn">${ICON.qr} Event QR</button>
+        <button class="btn btn-ghost btn-sm" id="evUploadBtn">${ICON.camera} Upload Photos</button>
+        <a href="#/event/${ev.id}" class="btn btn-ghost btn-sm">View public page</a>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none;">
+      <div id="uploadZone" style="display:none; margin-top:18px;">
+        <div class="card" style="padding:16px;">
+          <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:8px;"><span id="upLabel">Uploading…</span><span class="mono" id="upPct">0%</span></div>
+          <div class="progressbar"><div class="fill" id="upFill" style="width:0%;"></div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <h3 style="font-size:16px; margin-bottom:12px;">Gallery (<span id="pgCount">0</span>)</h3>
+      <div class="photo-grid" id="pgGrid"></div>
+    </div>`);
+    wrap.appendChild(body);
+
+    wrap.querySelector('#pgeCoverEditBtn').addEventListener('click', ()=>{
+      pickImage(async file=>{
+        const dataUrl = await setSharedImage('img:event:cover:'+ev.id, file);
+        wrap.querySelector('#pgeCoverImg').src = dataUrl;
+        toast('Cover photo updated');
+      });
+    });
+    body.querySelector('#pgeAvatarEditBtn').addEventListener('click', ()=>{
+      pickImage(async file=>{
+        const dataUrl = await setSharedImage('img:event:avatar:'+ev.id, file);
+        body.querySelector('#pgeAvatarImg').src = dataUrl;
+        toast('Profile photo updated');
+      });
+    });
+
+    async function drawGallery(){
+      const grid = body.querySelector('#pgGrid');
+      const photos = await getEventPhotos(ev);
+      body.querySelector('#pgCount').textContent = photos.length;
+      grid.innerHTML = '';
+      if(photos.length===0){
+        grid.appendChild(h(`<div class="empty" style="grid-column:1/-1;"><p>No photos uploaded yet.</p></div>`));
+        return;
+      }
+      renderInfiniteGrid(grid, photos, p=>{
+        const card = h(`<div class="photo-card">
+          ${p.type==='video' ? `<div class="tag">${ICON.video}</div>` : ''}
+          <img src="${p.thumb}" loading="lazy">
+          <button class="mini-btn" data-act="delphoto" style="position:absolute; top:8px; right:8px;">${ICON.trash}</button>
+          ${p.source==='upload' ? `
+          <div class="actions" style="justify-content:space-between; align-items:center; padding:8px 10px;">
+            <span style="font-size:10.5px; font-weight:600; padding:4px 9px; border-radius:999px; background:rgba(10,9,8,0.6); color:#fff;">${p.isPublic?'Public':'Private'}</span>
+            <div class="switch ${p.isPublic?'on':''}" data-id="${p.id}"></div>
+          </div>` : ''}
+        </div>`);
+        card.querySelector('img').addEventListener('click', ()=>openLightbox(p));
+        card.querySelector('.switch')?.addEventListener('click', async e=>{
+          e.stopPropagation();
+          const next = !p.isPublic;
+          p.isPublic = next;
+          e.currentTarget.classList.toggle('on');
+          e.currentTarget.parentElement.querySelector('span').textContent = next?'Public':'Private';
+          await UploadsDB.setPublic(p.id, next);
+          toast(next?'Visible to guests':'Hidden from guests');
+        });
+        card.querySelector('[data-act=delphoto]').addEventListener('click', e=>{
+          e.stopPropagation();
+          showConfirmSheet({
+            title:'Delete this photo?',
+            message:'This removes the photo from the event gallery for all guests on this device. This cannot be undone.',
+            confirmLabel:'Delete Photo',
+            onConfirm: async ()=>{
+              if(p.source==='upload') await UploadsDB.remove(p.id);
+              else await Store.deleteDemoPhoto(p.id);
+              if(!isDemo){ ev.mediaCount = Math.max(0,(ev.mediaCount||0)-1); await Store.saveEvent(ev); }
+              toast('Photo deleted');
+              drawGallery();
+            }
+          });
+        });
+        return card;
+      }, 10);
+    }
+    drawGallery();
+
+    body.querySelector('#evQrBtn').addEventListener('click', ()=>showQRSheet(location.origin+location.pathname+'#/event/'+ev.id, ev.name+' QR'));
+    const fileInput = body.querySelector('#fileInput');
+    body.querySelector('#evUploadBtn').addEventListener('click', ()=>fileInput.click());
+    fileInput.addEventListener('change', async ()=>{
+      const files = [...fileInput.files];
+      if(files.length===0) return;
+      const zone = body.querySelector('#uploadZone'); zone.style.display='block';
+      const fill = body.querySelector('#upFill'); const pct = body.querySelector('#upPct'); const label = body.querySelector('#upLabel');
+      for(let i=0;i<files.length;i++){
+        const f = files[i];
+        label.textContent = `Uploading ${f.name}`;
+        await UploadsDB.add({
+          id: 'up_'+ev.id+'_'+Date.now()+'_'+i,
+          eventId: ev.id,
+          type: f.type.startsWith('video')?'video':'photo',
+          blob: f, ts: Date.now()
+        });
+        const p = Math.round(((i+1)/files.length)*100);
+        fill.style.width = p+'%'; pct.textContent = p+'%';
+      }
+      ev.mediaCount = (ev.mediaCount||0) + files.length;
+      if(!isDemo) await Store.saveEvent(ev);
+      toast(`${files.length} file${files.length>1?'s':''} uploaded`);
+      fileInput.value = '';
+      setTimeout(()=>{ zone.style.display='none'; }, 900);
+      drawGallery();
+    });
+  })();
+
+  return wrap;
+}
+
+function ViewCreateEvent(){
+  const wrap = h(`<div class="fade-in container" style="padding-top:26px; max-width:520px;">
+    <a href="#/photographer" class="btn btn-ghost btn-sm" style="margin-bottom:16px;">&larr; Cancel</a>
+    <h2 style="font-size:clamp(19px,5vw,24px);">Create Event</h2>
+    <p style="color:var(--text-muted); font-size:13.5px; margin-top:6px; margin-bottom:22px;">Set up a new gallery with its own QR code.</p>
+
+    <div class="cover-wrap" id="ceCoverWrap" style="height:130px;">
+      <img id="ceCoverPreview" src="https://picsum.photos/seed/newevent/1200/500" alt="" style="opacity:0.55;">
+      <button class="photo-edit-btn cover-edit-btn" type="button" id="ceCoverBtn">${ICON.camera} <span style="font-size:11px; margin-left:4px;">Cover</span></button>
+    </div>
+    <div class="profile-head" style="margin-top:-30px;">
+      <div class="avatar-wrap">
+        <img class="avatar" id="ceAvatarPreview" width="64" height="64" src="https://picsum.photos/seed/newevent2/200/200" alt="" style="opacity:0.55;">
+        <button class="photo-edit-btn avatar-edit-btn" type="button" id="ceAvatarBtn" style="width:24px;height:24px;">${ICON.camera}</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-dim); padding-bottom:8px;">Tap to set a cover & profile photo (optional)</p>
+    </div>
+
+    <form id="ceForm" style="margin-top:14px;">
+      <div class="field"><label>Event Name</label><input required name="name" placeholder="Adil & Fathima Wedding"></div>
+      <div class="field"><label>Event Display Name</label><input name="display" placeholder="Ambro Photography"></div>
+      <div class="field"><label>Description (optional)</label><textarea name="desc" rows="3" placeholder="Capturing your beautiful moments."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Phone</label><input name="phone" placeholder="+919876543210"></div>
+        <div class="field"><label>WhatsApp</label><input name="whatsapp" placeholder="919876543210"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Event Date</label><input type="date" name="date"></div>
+        <div class="field"><label>Expiry</label>
+          <select name="expiry">
+            <option value="1">1 Day</option><option value="3">3 Days</option>
+            <option value="5">5 Days</option><option value="7" selected>7 Days</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-gold btn-block" type="submit" style="margin-top:8px;">Create Event & Generate QR</button>
+    </form>
+  </div>`);
+
+  let coverFile = null, avatarFile = null;
+  wrap.querySelector('#ceCoverBtn').addEventListener('click', ()=>{
+    pickImage(file=>{
+      coverFile = file;
+      wrap.querySelector('#ceCoverPreview').src = URL.createObjectURL(file);
+      wrap.querySelector('#ceCoverPreview').style.opacity = '1';
+    });
+  });
+  wrap.querySelector('#ceAvatarBtn').addEventListener('click', ()=>{
+    pickImage(file=>{
+      avatarFile = file;
+      wrap.querySelector('#ceAvatarPreview').src = URL.createObjectURL(file);
+      wrap.querySelector('#ceAvatarPreview').style.opacity = '1';
+    });
+  });
+
+  wrap.querySelector('#ceForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const id = (fd.get('name')||'event').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') + '-' + Math.random().toString(36).slice(2,6);
+    const ev = {
+      id, name: fd.get('name'), studio: fd.get('display')||'', tagline: fd.get('desc')||'',
+      date: fd.get('date')||new Date().toISOString().slice(0,10),
+      expiry: fd.get('expiry')==='custom' ? 'custom' : (new Date(Date.now()+ (+fd.get('expiry')||7)*86400000)).toISOString().slice(0,10),
+      cover: `https://picsum.photos/seed/${id}cover/1200/700`, avatar: `https://picsum.photos/seed/${id}avatar/200/200`,
+      phone: fd.get('phone')||'', whatsapp: fd.get('whatsapp')||'', mediaCount: 0
+    };
+    await Store.addEvent(ev);
+    if(coverFile) await setSharedImage('img:event:cover:'+id, coverFile);
+    if(avatarFile) await setSharedImage('img:event:avatar:'+id, avatarFile);
+    toast('Event created');
+    location.hash = '#/photographer/'+id;
+  });
+  return wrap;
+}
+</script>
+</body>
+</html>
